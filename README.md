@@ -2,6 +2,12 @@
 
 A modern, cross-platform food delivery application built with React Native, Expo, and Supabase. This app provides a complete food ordering experience with user authentication, restaurant browsing, cart management, and order tracking.
 
+## 🌐 Live Demo
+
+**🚀 [View Live App](https://food-delivery-phi-plum.vercel.app/)**
+
+The app is deployed on Vercel and accessible via web browser. You can test all features including user registration, login, and the complete food ordering experience.
+
 ## 🚀 Features
 
 ### User Authentication

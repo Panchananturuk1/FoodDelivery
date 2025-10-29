@@ -20,27 +20,55 @@ const ForgotPasswordScreen = ({ navigation }) => {
   const { resetPassword } = useAuth();
 
   const handleResetPassword = async () => {
-    if (!email) {
-      Alert.alert('Error', 'Please enter your email address');
+    // Validate email input
+    if (!email.trim()) {
+      Alert.alert('Validation Error', 'Please enter your email address');
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      Alert.alert('Error', 'Please enter a valid email address');
+    if (!emailRegex.test(email.trim())) {
+      Alert.alert('Invalid Email', 'Please enter a valid email address (e.g., user@example.com)');
       return;
     }
 
     setLoading(true);
-    const { error } = await resetPassword(email);
+    const { error } = await resetPassword(email.trim());
     
     if (error) {
-      Alert.alert('Error', error.message);
+      // Handle specific error cases
+      let title = 'Reset Failed';
+      let message = error.message;
+
+      if (error.message?.includes('User not found')) {
+        title = 'Email Not Found';
+        message = 'No account found with this email address. Please check your email or sign up for a new account.';
+      } else if (error.message?.includes('Too many requests') || error.message?.includes('429')) {
+        title = 'Too Many Attempts';
+        message = 'Too many password reset requests. Please wait a few minutes before trying again.';
+      } else if (error.message?.includes('network') || error.message?.includes('fetch')) {
+        title = 'Connection Error';
+        message = 'Unable to connect to the server. Please check your internet connection and try again.';
+      } else if (error.message?.includes('Email rate limit exceeded')) {
+        title = 'Email Limit Exceeded';
+        message = 'Too many emails sent to this address. Please wait before requesting another reset email.';
+      }
+
+      Alert.alert(title, message, [
+        { text: 'OK' },
+        ...(error.message?.includes('User not found') ? [{
+          text: 'Sign Up Instead',
+          onPress: () => navigation.navigate('Signup')
+        }] : [])
+      ]);
     } else {
       Alert.alert(
-        'Success',
-        'Password reset email sent! Please check your email for instructions.',
-        [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
+        'Email Sent Successfully',
+        'Password reset instructions have been sent to your email address. Please check your inbox and follow the instructions to reset your password.',
+        [{ 
+          text: 'OK', 
+          onPress: () => navigation.navigate('Login', { email: email.trim() })
+        }]
       );
     }
     setLoading(false);

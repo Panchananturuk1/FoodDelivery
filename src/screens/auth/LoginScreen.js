@@ -13,6 +13,8 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
+import CustomAlert from '../../components/CustomAlert';
+import { useAlert } from '../../hooks/useAlert';
 
 const LoginScreen = ({ navigation, route }) => {
   const [email, setEmail] = useState('');
@@ -21,6 +23,7 @@ const LoginScreen = ({ navigation, route }) => {
   const [showPassword, setShowPassword] = useState(false);
 
   const { signIn } = useAuth();
+  const { alertConfig, showAlert, hideAlert, showValidationError, showInvalidInput } = useAlert();
 
   // Pre-fill email if coming from signup
   useEffect(() => {
@@ -38,17 +41,97 @@ const LoginScreen = ({ navigation, route }) => {
     }
   }, [route.params]);
 
-  const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
-      return;
+  const validateForm = () => {
+    // Check for empty fields
+    if (!email.trim()) {
+      showValidationError('Please enter your email address');
+      return false;
     }
 
+    if (!password.trim()) {
+      showValidationError('Please enter your password');
+      return false;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      showInvalidInput('Email', 'Please enter a valid email address (e.g., user@example.com)');
+      return false;
+    }
+
+    // Check minimum password length
+    if (password.length < 6) {
+      showInvalidInput('Password', 'Password must be at least 6 characters long');
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleLogin = async () => {
+    if (!validateForm()) return;
+
     setLoading(true);
-    const { error } = await signIn(email, password);
+    const { error } = await signIn(email.trim(), password);
     
     if (error) {
-      Alert.alert('Login Failed', error.message);
+      // Handle specific error cases
+      if (error.message.includes('Email not confirmed')) {
+        showAlert(
+          'Email Not Verified',
+          'Please check your email and click the verification link before signing in.',
+          [{ text: 'OK', onPress: hideAlert }]
+        );
+      } else if (error.message.includes('Invalid login credentials')) {
+        showAlert(
+          'Invalid Credentials',
+          'The email or password you entered is incorrect. Please try again.',
+          [
+            { text: 'Cancel', style: 'cancel', onPress: hideAlert },
+            { 
+              text: 'Forgot Password?', 
+              onPress: () => {
+                hideAlert();
+                navigation.navigate('ForgotPassword');
+              }
+            }
+          ]
+        );
+      } else if (error.message.includes('Too many requests')) {
+        showAlert(
+          'Too Many Attempts',
+          'Too many login attempts. Please wait a few minutes before trying again.',
+          [{ text: 'OK', onPress: hideAlert }]
+        );
+      } else if (error.message.includes('User not found')) {
+        showAlert(
+          'Account Not Found',
+          'No account found with this email address. Please check your email or sign up for a new account.',
+          [
+            { text: 'Cancel', style: 'cancel', onPress: hideAlert },
+            { 
+              text: 'Sign Up', 
+              onPress: () => {
+                hideAlert();
+                navigation.navigate('Signup');
+              }
+            }
+          ]
+        );
+      } else if (error.message.includes('Network request failed') || error.message.includes('fetch')) {
+        showAlert(
+          'Connection Error',
+          'Unable to connect to the server. Please check your internet connection and try again.',
+          [{ text: 'OK', onPress: hideAlert }]
+        );
+      } else {
+        showAlert(
+          'Login Failed',
+          error.message || 'An unexpected error occurred. Please try again.',
+          [{ text: 'OK', onPress: hideAlert }]
+        );
+      }
     }
     setLoading(false);
   };
@@ -133,6 +216,14 @@ const LoginScreen = ({ navigation, route }) => {
           </View>
         </ScrollView>
       </LinearGradient>
+      
+      <CustomAlert
+        visible={alertConfig.visible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        buttons={alertConfig.buttons}
+        onClose={hideAlert}
+      />
     </KeyboardAvoidingView>
   );
 };

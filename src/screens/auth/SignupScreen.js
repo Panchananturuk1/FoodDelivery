@@ -13,6 +13,8 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
+import CustomAlert from '../../components/CustomAlert';
+import { useAlert } from '../../hooks/useAlert';
 
 const SignupScreen = ({ navigation }) => {
   const [formData, setFormData] = useState({
@@ -27,6 +29,7 @@ const SignupScreen = ({ navigation }) => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const { signUp } = useAuth();
+  const { alertConfig, showAlert, hideAlert, showValidationError, showInvalidInput } = useAlert();
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -38,24 +41,84 @@ const SignupScreen = ({ navigation }) => {
   const validateForm = () => {
     const { fullName, email, phone, password, confirmPassword } = formData;
     
-    if (!fullName || !email || !phone || !password || !confirmPassword) {
-      Alert.alert('Error', 'Please fill in all fields');
+    // Check for empty fields
+    if (!fullName.trim()) {
+      showValidationError('Please enter your full name');
       return false;
     }
 
-    if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
+    if (!email.trim()) {
+      showValidationError('Please enter your email address');
       return false;
     }
 
-    if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters long');
+    if (!phone.trim()) {
+      showValidationError('Please enter your phone number');
       return false;
     }
 
+    if (!password.trim()) {
+      showValidationError('Please enter a password');
+      return false;
+    }
+
+    if (!confirmPassword.trim()) {
+      showValidationError('Please confirm your password');
+      return false;
+    }
+
+    // Validate full name (at least 2 characters, letters and spaces only)
+    if (fullName.trim().length < 2) {
+      showInvalidInput('Name', 'Full name must be at least 2 characters long');
+      return false;
+    }
+
+    const nameRegex = /^[a-zA-Z\s]+$/;
+    if (!nameRegex.test(fullName.trim())) {
+      showInvalidInput('Name', 'Full name should only contain letters and spaces');
+      return false;
+    }
+
+    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      Alert.alert('Error', 'Please enter a valid email address');
+    if (!emailRegex.test(email.trim())) {
+      showInvalidInput('Email', 'Please enter a valid email address (e.g., user@example.com)');
+      return false;
+    }
+
+    // Validate phone number (basic validation for 10+ digits)
+    const phoneRegex = /^[\+]?[\d\s\-\(\)]{10,}$/;
+    if (!phoneRegex.test(phone.trim())) {
+      showInvalidInput('Phone', 'Please enter a valid phone number (at least 10 digits)');
+      return false;
+    }
+
+    // Validate password strength
+    if (password.length < 6) {
+      showInvalidInput('Password', 'Password must be at least 6 characters long');
+      return false;
+    }
+
+    if (password.length > 50) {
+      showInvalidInput('Password', 'Password must be less than 50 characters');
+      return false;
+    }
+
+    // Check for at least one letter and one number
+    const hasLetter = /[a-zA-Z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    
+    if (!hasLetter || !hasNumber) {
+      showInvalidInput(
+        'Password', 
+        'Password must contain at least one letter and one number for better security'
+      );
+      return false;
+    }
+
+    // Check password confirmation
+    if (password !== confirmPassword) {
+      showValidationError('Passwords do not match. Please make sure both passwords are identical.');
       return false;
     }
 
@@ -68,18 +131,65 @@ const SignupScreen = ({ navigation }) => {
     setLoading(true);
     const { fullName, email, phone, password } = formData;
     
-    const { error, message, requiresConfirmation } = await signUp(email, password, {
-      full_name: fullName,
-      phone: phone,
+    const { error, message, requiresConfirmation } = await signUp(email.trim(), password, {
+      full_name: fullName.trim(),
+      phone: phone.trim(),
     });
     
     if (error) {
-      const errorMessage = error.message || 'An error occurred during signup';
-      Alert.alert(
-        'Signup Failed', 
-        errorMessage,
-        [{ text: 'OK' }]
-      );
+      // Handle specific error cases with user-friendly messages
+      if (error.message?.includes('User already registered')) {
+        showAlert(
+          'Account Already Exists',
+          'An account with this email address already exists. Please try logging in instead.',
+          [
+            { text: 'Cancel', style: 'cancel', onPress: hideAlert },
+            { 
+              text: 'Login', 
+              onPress: () => {
+                hideAlert();
+                navigation.navigate('Login', { email: email.trim() });
+              }
+            }
+          ]
+        );
+      } else if (error.message?.includes('Invalid email')) {
+        showAlert(
+          'Invalid Email',
+          'Please enter a valid email address.',
+          [{ text: 'OK', onPress: hideAlert }]
+        );
+      } else if (error.message?.includes('Password should be at least')) {
+        showAlert(
+          'Weak Password',
+          'Password must be at least 6 characters long.',
+          [{ text: 'OK', onPress: hideAlert }]
+        );
+      } else if (error.message?.includes('Too many requests') || error.message?.includes('429')) {
+        showAlert(
+          'Too Many Attempts',
+          'Too many signup attempts. Please wait a few minutes before trying again.',
+          [{ text: 'OK', onPress: hideAlert }]
+        );
+      } else if (error.message?.includes('network') || error.message?.includes('fetch')) {
+        showAlert(
+          'Connection Error',
+          'Unable to connect to the server. Please check your internet connection and try again.',
+          [{ text: 'OK', onPress: hideAlert }]
+        );
+      } else if (error.message?.includes('Email rate limit exceeded')) {
+        showAlert(
+          'Email Limit Exceeded',
+          'Too many emails sent. Please wait before requesting another verification email.',
+          [{ text: 'OK', onPress: hideAlert }]
+        );
+      } else {
+        showAlert(
+          'Signup Failed',
+          error.message || 'An unexpected error occurred during signup. Please try again.',
+          [{ text: 'OK', onPress: hideAlert }]
+        );
+      }
     } else {
       // Handle different signup outcomes
       if (requiresConfirmation) {
@@ -92,7 +202,7 @@ const SignupScreen = ({ navigation }) => {
             onPress: () => {
               // Navigate to login screen
               navigation.navigate('Login', { 
-                email: email,
+                email: email.trim(),
                 showConfirmationMessage: true 
               });
             }
@@ -106,7 +216,7 @@ const SignupScreen = ({ navigation }) => {
           [{ 
             text: 'Sign In Now', 
             onPress: () => {
-              navigation.navigate('Login', { email: email });
+              navigation.navigate('Login', { email: email.trim() });
             }
           }]
         );
@@ -235,6 +345,14 @@ const SignupScreen = ({ navigation }) => {
           </View>
         </ScrollView>
       </LinearGradient>
+      
+      <CustomAlert
+        visible={alertConfig.visible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        buttons={alertConfig.buttons}
+        onClose={hideAlert}
+      />
     </KeyboardAvoidingView>
   );
 };
