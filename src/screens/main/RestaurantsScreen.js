@@ -22,17 +22,17 @@ const RestaurantsScreen = ({ navigation }) => {
       {
         id: 1,
         name: 'Pizza Palace',
-        image: 'https://via.placeholder.com/300x200/FF6B6B/FFFFFF?text=Pizza+Palace',
+        image: 'https://via.placeholder.com/400x250/FF6B6B/FFFFFF?text=Pizza+Palace',
         rating: 4.5,
         deliveryTime: '25-30 min',
         cuisine: 'Italian',
         deliveryFee: 2.99,
-        description: 'Authentic Italian pizza with fresh ingredients',
+        description: 'Authentic Italian pizza and pasta',
       },
       {
         id: 2,
         name: 'Burger Barn',
-        image: 'https://via.placeholder.com/300x200/4ECDC4/FFFFFF?text=Burger+Barn',
+        image: 'https://via.placeholder.com/400x250/4ECDC4/FFFFFF?text=Burger+Barn',
         rating: 4.3,
         deliveryTime: '20-25 min',
         cuisine: 'American',
@@ -42,22 +42,42 @@ const RestaurantsScreen = ({ navigation }) => {
       {
         id: 3,
         name: 'Sushi Spot',
-        image: 'https://via.placeholder.com/300x200/45B7D1/FFFFFF?text=Sushi+Spot',
+        image: 'https://via.placeholder.com/400x250/45B7D1/FFFFFF?text=Sushi+Spot',
         rating: 4.7,
         deliveryTime: '30-35 min',
         cuisine: 'Japanese',
-        deliveryFee: 3.99,
+        deliveryFee: 3.49,
         description: 'Fresh sushi and Japanese cuisine',
       },
       {
         id: 4,
         name: 'Taco Time',
-        image: 'https://via.placeholder.com/300x200/F39C12/FFFFFF?text=Taco+Time',
+        image: 'https://via.placeholder.com/400x250/FF9500/FFFFFF?text=Taco+Time',
         rating: 4.2,
         deliveryTime: '15-20 min',
         cuisine: 'Mexican',
         deliveryFee: 1.49,
         description: 'Authentic Mexican tacos and burritos',
+      },
+      {
+        id: 5,
+        name: 'Thai Garden',
+        image: 'https://via.placeholder.com/400x250/E74C3C/FFFFFF?text=Thai+Garden',
+        rating: 4.6,
+        deliveryTime: '35-40 min',
+        cuisine: 'Thai',
+        deliveryFee: 2.49,
+        description: 'Spicy and flavorful Thai dishes',
+      },
+      {
+        id: 6,
+        name: 'Healthy Bowls',
+        image: 'https://via.placeholder.com/400x250/27AE60/FFFFFF?text=Healthy+Bowls',
+        rating: 4.4,
+        deliveryTime: '20-25 min',
+        cuisine: 'Healthy',
+        deliveryFee: 1.99,
+        description: 'Fresh salads and healthy bowls',
       },
     ];
     setRestaurants(mockRestaurants);
@@ -119,8 +139,8 @@ const RestaurantsScreen = ({ navigation }) => {
         data={filteredRestaurants}
         renderItem={renderRestaurant}
         keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={styles.list}
-        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[styles.list, { paddingBottom: 100 }]} // ensure space for tab bar
+        showsVerticalScrollIndicator={true}
       />
     </SafeAreaView>
   );

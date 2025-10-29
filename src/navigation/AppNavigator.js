@@ -19,6 +19,7 @@ import CartScreen from '../screens/main/CartScreen';
 import ProfileScreen from '../screens/main/ProfileScreen';
 import RestaurantDetailScreen from '../screens/main/RestaurantDetailScreen';
 import OrderHistoryScreen from '../screens/main/OrderHistoryScreen';
+import AddressScreen from '../screens/main/AddressScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -59,7 +60,7 @@ const MainTabs = () => (
       headerShown: false,
     })}
   >
-    <Tab.Screen name="Home" component={HomeScreen} />
+    <Tab.Screen name="Home" component={HomeScreen} options={{ unmountOnBlur: true }} />
     <Tab.Screen name="Restaurants" component={RestaurantsScreen} />
     <Tab.Screen name="Cart" component={CartScreen} />
     <Tab.Screen name="Profile" component={ProfileScreen} />
@@ -71,6 +72,7 @@ const MainStack = () => (
     <Stack.Screen name="MainTabs" component={MainTabs} />
     <Stack.Screen name="RestaurantDetail" component={RestaurantDetailScreen} />
     <Stack.Screen name="OrderHistory" component={OrderHistoryScreen} />
+    <Stack.Screen name="Address" component={AddressScreen} />
   </Stack.Navigator>
 );
 

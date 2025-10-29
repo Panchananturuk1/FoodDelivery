@@ -9,10 +9,10 @@ import {
   Image,
   FlatList,
   Dimensions,
-  Modal,
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useIsFocused } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../contexts/AuthContext';
@@ -67,6 +67,14 @@ const HomeScreen = ({ navigation }) => {
       { id: 6, name: 'Indian', icon: '🍛' },
     ]);
   }, []);
+
+  const isFocused = useIsFocused();
+  useEffect(() => {
+    // Ensure Home modal does not block interactions on other screens
+    if (!isFocused) {
+      setShowUserMenu(false);
+    }
+  }, [isFocused]);
 
   const renderRestaurantCard = ({ item }) => (
     <TouchableOpacity
@@ -149,7 +157,12 @@ const HomeScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={{ flex: 1 }}
+        showsVerticalScrollIndicator={true}
+        contentContainerStyle={{ paddingBottom: 100 }}
+        keyboardShouldPersistTaps="handled"
+      >
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.locationContainer}>
@@ -229,77 +242,61 @@ const HomeScreen = ({ navigation }) => {
         </View>
       </ScrollView>
 
-      {/* User Menu Modal */}
-      <Modal
-        visible={showUserMenu}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowUserMenu(false)}
-      >
-        <TouchableOpacity 
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setShowUserMenu(false)}
-        >
-          <TouchableOpacity 
-            style={styles.userMenuContainer}
+      {/* User Menu Overlay - Web Compatible */}
+      {showUserMenu && (
+        <View style={styles.modalOverlay}>
+          <TouchableOpacity
+            style={styles.overlayBackground}
             activeOpacity={1}
-            onPress={(e) => e.stopPropagation()}
-          >
-            <View style={styles.userMenuHeader}>
-              <View style={styles.userMenuAvatar}>
-                <Text style={styles.userMenuInitials}>{getUserInitials()}</Text>
-              </View>
-              <View style={styles.userMenuInfo}>
-                <Text style={styles.userMenuEmail}>{user?.email || 'User'}</Text>
-                <Text style={styles.userMenuSubtext}>Food Delivery User</Text>
-              </View>
-            </View>
-            
-            <View style={styles.userMenuDivider} />
-            
-            <TouchableOpacity 
+            onPress={() => setShowUserMenu(false)}
+          />
+          <View style={styles.userMenuContainer}>
+            <TouchableOpacity
               style={styles.userMenuItem}
-              onPress={(e) => {
-                e.stopPropagation();
-                handleViewProfile();
-              }}
-            >
-              <Ionicons name="person-outline" size={20} color="#333" />
-              <Text style={styles.userMenuItemText}>View Profile</Text>
-              <Ionicons name="chevron-forward" size={16} color="#666" />
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={styles.userMenuItem}
-              onPress={async (e) => {
-                console.log('🟡 Modal: Logout button pressed - using direct logout');
-                e.stopPropagation();
+              onPress={() => {
                 setShowUserMenu(false);
-                
-                // Use the same direct logout functionality that worked in test button
-                try {
-                  console.log('🟡 Modal: Calling signOut directly...');
-                  const result = await signOut();
-                  console.log('🟡 Modal: Direct signOut result:', result);
-                  if (!result.success) {
-                    console.error('🟡 Modal: Direct signOut failed:', result.error);
-                    Alert.alert('Error', 'Failed to logout. Please try again.');
-                  } else {
-                    console.log('🟡 Modal: Direct signOut successful, should redirect now');
-                  }
-                } catch (error) {
-                  console.error('🟡 Modal: Exception during direct signOut:', error);
-                  Alert.alert('Error', 'An unexpected error occurred during logout.');
-                }
+                navigation.navigate('Profile');
               }}
             >
-              <Ionicons name="log-out-outline" size={20} color="#FF6B6B" />
-              <Text style={[styles.userMenuItemText, { color: '#FF6B6B' }]}>Logout</Text>
+              <Ionicons name="person-outline" size={24} color="#333" />
+              <Text style={styles.userMenuItemText}>Profile</Text>
             </TouchableOpacity>
-          </TouchableOpacity>
-        </TouchableOpacity>
-      </Modal>
+            
+            <TouchableOpacity
+              style={styles.userMenuItem}
+              onPress={() => {
+                setShowUserMenu(false);
+                navigation.navigate('Orders');
+              }}
+            >
+              <Ionicons name="receipt-outline" size={24} color="#333" />
+              <Text style={styles.userMenuItemText}>Orders</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={styles.userMenuItem}
+              onPress={() => {
+                setShowUserMenu(false);
+                navigation.navigate('Addresses');
+              }}
+            >
+              <Ionicons name="location-outline" size={24} color="#333" />
+              <Text style={styles.userMenuItemText}>Addresses</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={styles.userMenuItem}
+              onPress={() => {
+                setShowUserMenu(false);
+                navigation.navigate('Settings');
+              }}
+            >
+              <Ionicons name="settings-outline" size={24} color="#333" />
+              <Text style={styles.userMenuItemText}>Settings</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 };
@@ -521,14 +518,26 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  // Modal Styles
+  // Overlay Styles
   modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1000,
     justifyContent: 'flex-start',
     alignItems: 'flex-end',
     paddingTop: 80,
     paddingRight: 20,
+  },
+  overlayBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   userMenuContainer: {
     backgroundColor: 'white',

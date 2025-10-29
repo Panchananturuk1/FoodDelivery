@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -10,58 +10,40 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useCart } from '../../contexts/CartContext';
 
 const CartScreen = ({ navigation }) => {
-  const [cartItems, setCartItems] = useState([
-    {
-      id: 1,
-      name: 'Margherita Pizza',
-      restaurant: 'Pizza Palace',
-      price: 12.99,
-      quantity: 2,
-      image: 'https://via.placeholder.com/80x80/FF6B6B/FFFFFF?text=Pizza',
-    },
-    {
-      id: 2,
-      name: 'Cheeseburger',
-      restaurant: 'Burger Barn',
-      price: 8.99,
-      quantity: 1,
-      image: 'https://via.placeholder.com/80x80/4ECDC4/FFFFFF?text=Burger',
-    },
-  ]);
+  const {
+    cartItems,
+    updateQuantity,
+    removeFromCart,
+    getSubtotal,
+    getDeliveryFee,
+    getTax,
+    getTotal,
+    clearCart,
+  } = useCart();
 
-  const updateQuantity = (id, change) => {
-    setCartItems(prevItems =>
-      prevItems.map(item => {
-        if (item.id === id) {
-          const newQuantity = item.quantity + change;
-          return newQuantity > 0 ? { ...item, quantity: newQuantity } : item;
-        }
-        return item;
-      }).filter(item => item.quantity > 0)
+  const handleRemoveItem = (id) => {
+    Alert.alert(
+      'Remove Item',
+      'Are you sure you want to remove this item from your cart?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Remove', style: 'destructive', onPress: () => removeFromCart(id) },
+      ]
     );
   };
-
-  const removeItem = (id) => {
-    setCartItems(prevItems => prevItems.filter(item => item.id !== id));
-  };
-
-  const calculateSubtotal = () => {
-    return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
-  };
-
-  const deliveryFee = 2.99;
-  const tax = calculateSubtotal() * 0.08;
-  const total = calculateSubtotal() + deliveryFee + tax;
 
   const handleCheckout = () => {
     if (cartItems.length === 0) {
       Alert.alert('Empty Cart', 'Please add items to your cart before checkout.');
       return;
     }
-    Alert.alert('Checkout', 'Order placed successfully!');
+    navigation.navigate('Address');
   };
+
+
 
   const renderCartItem = ({ item }) => (
     <View style={styles.cartItem}>
@@ -74,21 +56,21 @@ const CartScreen = ({ navigation }) => {
       <View style={styles.quantityControls}>
         <TouchableOpacity
           style={styles.quantityButton}
-          onPress={() => updateQuantity(item.id, -1)}
+          onPress={() => updateQuantity(item.id, item.quantity - 1)}
         >
           <Ionicons name="remove" size={20} color="#FF6B6B" />
         </TouchableOpacity>
         <Text style={styles.quantity}>{item.quantity}</Text>
         <TouchableOpacity
           style={styles.quantityButton}
-          onPress={() => updateQuantity(item.id, 1)}
+          onPress={() => updateQuantity(item.id, item.quantity + 1)}
         >
           <Ionicons name="add" size={20} color="#FF6B6B" />
         </TouchableOpacity>
       </View>
       <TouchableOpacity
         style={styles.removeButton}
-        onPress={() => removeItem(item.id)}
+        onPress={() => handleRemoveItem(item.id)}
       >
         <Ionicons name="trash-outline" size={20} color="#FF6B6B" />
       </TouchableOpacity>
@@ -126,32 +108,33 @@ const CartScreen = ({ navigation }) => {
         data={cartItems}
         renderItem={renderCartItem}
         keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={styles.list}
-        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[styles.list, { paddingBottom: 100 }]} // ensure space for footer/tab bar
+        showsVerticalScrollIndicator={true}
+        ListFooterComponent={(
+          <View style={styles.summary}>
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Subtotal</Text>
+              <Text style={styles.summaryValue}>${getSubtotal().toFixed(2)}</Text>
+            </View>
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Delivery Fee</Text>
+              <Text style={styles.summaryValue}>${getDeliveryFee().toFixed(2)}</Text>
+            </View>
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Tax</Text>
+              <Text style={styles.summaryValue}>${getTax().toFixed(2)}</Text>
+            </View>
+            <View style={[styles.summaryRow, styles.totalRow]}>
+              <Text style={styles.totalLabel}>Total</Text>
+              <Text style={styles.totalValue}>${getTotal().toFixed(2)}</Text>
+            </View>
+
+            <TouchableOpacity style={styles.checkoutButton} onPress={handleCheckout}>
+              <Text style={styles.checkoutButtonText}>Proceed to Checkout</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       />
-
-      <View style={styles.summary}>
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Subtotal</Text>
-          <Text style={styles.summaryValue}>${calculateSubtotal().toFixed(2)}</Text>
-        </View>
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Delivery Fee</Text>
-          <Text style={styles.summaryValue}>${deliveryFee.toFixed(2)}</Text>
-        </View>
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Tax</Text>
-          <Text style={styles.summaryValue}>${tax.toFixed(2)}</Text>
-        </View>
-        <View style={[styles.summaryRow, styles.totalRow]}>
-          <Text style={styles.totalLabel}>Total</Text>
-          <Text style={styles.totalValue}>${total.toFixed(2)}</Text>
-        </View>
-
-        <TouchableOpacity style={styles.checkoutButton} onPress={handleCheckout}>
-          <Text style={styles.checkoutButtonText}>Proceed to Checkout</Text>
-        </TouchableOpacity>
-      </View>
     </SafeAreaView>
   );
 };

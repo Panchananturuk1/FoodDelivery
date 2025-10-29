@@ -10,34 +10,81 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useCart } from '../../contexts/CartContext';
 
 const RestaurantDetailScreen = ({ route, navigation }) => {
   const { restaurant } = route.params;
+  const { addToCart, getCartItemCount } = useCart();
+  
   const [menuItems] = useState([
     {
       id: 1,
       name: 'Margherita Pizza',
-      description: 'Fresh tomatoes, mozzarella, basil',
+      description: 'Fresh tomatoes, mozzarella, basil, olive oil',
       price: 12.99,
-      image: 'https://via.placeholder.com/100x100/FF6B6B/FFFFFF?text=Pizza',
+      image: 'https://via.placeholder.com/300x200/FF6B6B/FFFFFF?text=Margherita+Pizza',
+      category: 'Pizza',
     },
     {
       id: 2,
       name: 'Pepperoni Pizza',
       description: 'Pepperoni, mozzarella, tomato sauce',
       price: 14.99,
-      image: 'https://via.placeholder.com/100x100/FF6B6B/FFFFFF?text=Pizza',
+      image: 'https://via.placeholder.com/300x200/E74C3C/FFFFFF?text=Pepperoni+Pizza',
+      category: 'Pizza',
     },
     {
       id: 3,
       name: 'Caesar Salad',
-      description: 'Romaine lettuce, parmesan, croutons',
+      description: 'Romaine lettuce, parmesan, croutons, caesar dressing',
       price: 8.99,
-      image: 'https://via.placeholder.com/100x100/4ECDC4/FFFFFF?text=Salad',
+      image: 'https://via.placeholder.com/300x200/27AE60/FFFFFF?text=Caesar+Salad',
+      category: 'Salads',
+    },
+    {
+      id: 4,
+      name: 'Grilled Chicken',
+      description: 'Herb-marinated grilled chicken breast with vegetables',
+      price: 16.99,
+      image: 'https://via.placeholder.com/300x200/F39C12/FFFFFF?text=Grilled+Chicken',
+      category: 'Main Course',
+    },
+    {
+      id: 5,
+      name: 'Pasta Carbonara',
+      description: 'Creamy pasta with bacon, eggs, and parmesan',
+      price: 13.99,
+      image: 'https://via.placeholder.com/300x200/FFD700/FFFFFF?text=Pasta+Carbonara',
+      category: 'Pasta',
+    },
+    {
+      id: 6,
+      name: 'Fish & Chips',
+      description: 'Beer-battered fish with crispy fries',
+      price: 15.99,
+      image: 'https://via.placeholder.com/300x200/3498DB/FFFFFF?text=Fish+%26+Chips',
+      category: 'Main Course',
+    },
+    {
+      id: 7,
+      name: 'Chocolate Cake',
+      description: 'Rich chocolate cake with vanilla ice cream',
+      price: 6.99,
+      image: 'https://via.placeholder.com/300x200/8E44AD/FFFFFF?text=Chocolate+Cake',
+      category: 'Desserts',
+    },
+    {
+      id: 8,
+      name: 'Fresh Juice',
+      description: 'Freshly squeezed orange juice',
+      price: 4.99,
+      image: 'https://via.placeholder.com/300x200/F1C40F/FFFFFF?text=Fresh+Juice',
+      category: 'Beverages',
     },
   ]);
 
-  const addToCart = (item) => {
+  const handleAddToCart = (item) => {
+    addToCart(item, restaurant);
     Alert.alert('Added to Cart', `${item.name} has been added to your cart!`);
   };
 
@@ -51,7 +98,7 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
       </View>
       <TouchableOpacity
         style={styles.addButton}
-        onPress={() => addToCart(item)}
+        onPress={() => handleAddToCart(item)}
       >
         <Ionicons name="add" size={24} color="white" />
       </TouchableOpacity>
@@ -60,7 +107,12 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={{ flex: 1 }}
+        showsVerticalScrollIndicator={true}
+        contentContainerStyle={{ paddingBottom: 100 }}
+        keyboardShouldPersistTaps="handled"
+      >
         {/* Header Image */}
         <View style={styles.imageContainer}>
           <Image source={{ uri: restaurant.image }} style={styles.restaurantImage} />
@@ -69,6 +121,17 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
             onPress={() => navigation.goBack()}
           >
             <Ionicons name="arrow-back" size={24} color="white" />
+          </TouchableOpacity>
+          <TouchableOpacity 
+          style={styles.cartButton}
+          onPress={() => navigation.navigate('MainTabs', { screen: 'Cart' })}
+        >
+            <Ionicons name="bag" size={24} color="white" />
+            {getCartItemCount() > 0 && (
+              <View style={styles.cartBadge}>
+                <Text style={styles.cartBadgeText}>{getCartItemCount()}</Text>
+              </View>
+            )}
           </TouchableOpacity>
         </View>
 
@@ -118,11 +181,35 @@ const styles = StyleSheet.create({
   },
   backButton: {
     position: 'absolute',
-    top: 20,
+    top: 40,
     left: 20,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     borderRadius: 20,
     padding: 8,
+  },
+  cartButton: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 20,
+    padding: 8,
+  },
+  cartBadge: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: '#FF6B6B',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cartBadgeText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   restaurantInfo: {
     backgroundColor: 'white',
