@@ -1,0 +1,63 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Development files
+.expo/
+.expo-shared/
+*.log
+
+# Environment files (will be set in Vercel dashboard)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Build artifacts
+dist/
+build/
+web-build/
+
+# Testing
+coverage/
+.nyc_output/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Documentation
+*.md
+!README.md
+
+# Database files
+database/
+*.sql
+
+# Test files
+test-auth.js
+test-auth.ps1
+*.test.js
+*.spec.js
+
+# Git
+.git/
+.gitignore
