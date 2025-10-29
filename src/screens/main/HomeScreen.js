@@ -243,14 +243,24 @@ const HomeScreen = ({ navigation }) => {
       </ScrollView>
 
       {/* User Menu Overlay - Web Compatible */}
-      {showUserMenu && (
-        <View style={styles.modalOverlay}>
+      {showUserMenu && isFocused && (
+        <View 
+          style={styles.modalOverlay}
+          accessible={true}
+          accessibilityRole="dialog"
+          accessibilityLabel="User menu"
+        >
           <TouchableOpacity
             style={styles.overlayBackground}
             activeOpacity={1}
             onPress={() => setShowUserMenu(false)}
+            accessible={false}
           />
-          <View style={styles.userMenuContainer}>
+          <View 
+            style={styles.userMenuContainer}
+            accessible={true}
+            accessibilityRole="menu"
+          >
             <TouchableOpacity
               style={styles.userMenuItem}
               onPress={() => {

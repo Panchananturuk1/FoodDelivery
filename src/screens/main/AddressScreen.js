@@ -8,6 +8,7 @@ import {
   TextInput,
   ActivityIndicator,
   Alert,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -219,10 +220,11 @@ const AddressScreen = ({ navigation }) => {
       </View>
 
       <ScrollView 
-        style={{ flex: 1 }}
+        style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={true}
         keyboardShouldPersistTaps="handled"
+        scrollEnabled={true}
       >
           <Text style={styles.sectionTitle}>Saved Addresses</Text>
           
@@ -337,6 +339,26 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8F9FA',
+    // Web-specific container styling
+    ...(Platform.OS === 'web' && {
+      height: '100vh',
+      maxHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+    }),
+  },
+  scrollView: {
+    flex: 1,
+    // Web-specific styling for proper scrolling
+    ...(Platform.OS === 'web' && {
+      height: '100%',
+      maxHeight: '100%',
+      overflow: 'auto',
+      overflowY: 'scroll',
+      WebkitOverflowScrolling: 'touch',
+      display: 'flex',
+      flexDirection: 'column',
+    }),
   },
   header: {
     flexDirection: 'row',
@@ -353,8 +375,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
   },
-
-
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 20,

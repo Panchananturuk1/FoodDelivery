@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Image,
   Alert,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,7 +23,7 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
       name: 'Margherita Pizza',
       description: 'Fresh tomatoes, mozzarella, basil, olive oil',
       price: 12.99,
-      image: 'https://via.placeholder.com/300x200/FF6B6B/FFFFFF?text=Margherita+Pizza',
+      image: 'https://picsum.photos/300/200?random=1',
       category: 'Pizza',
     },
     {
@@ -30,7 +31,7 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
       name: 'Pepperoni Pizza',
       description: 'Pepperoni, mozzarella, tomato sauce',
       price: 14.99,
-      image: 'https://via.placeholder.com/300x200/E74C3C/FFFFFF?text=Pepperoni+Pizza',
+      image: 'https://picsum.photos/300/200?random=2',
       category: 'Pizza',
     },
     {
@@ -38,7 +39,7 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
       name: 'Caesar Salad',
       description: 'Romaine lettuce, parmesan, croutons, caesar dressing',
       price: 8.99,
-      image: 'https://via.placeholder.com/300x200/27AE60/FFFFFF?text=Caesar+Salad',
+      image: 'https://picsum.photos/300/200?random=3',
       category: 'Salads',
     },
     {
@@ -46,7 +47,7 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
       name: 'Grilled Chicken',
       description: 'Herb-marinated grilled chicken breast with vegetables',
       price: 16.99,
-      image: 'https://via.placeholder.com/300x200/F39C12/FFFFFF?text=Grilled+Chicken',
+      image: 'https://picsum.photos/300/200?random=4',
       category: 'Main Course',
     },
     {
@@ -54,7 +55,7 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
       name: 'Pasta Carbonara',
       description: 'Creamy pasta with bacon, eggs, and parmesan',
       price: 13.99,
-      image: 'https://via.placeholder.com/300x200/FFD700/FFFFFF?text=Pasta+Carbonara',
+      image: 'https://picsum.photos/300/200?random=5',
       category: 'Pasta',
     },
     {
@@ -62,7 +63,7 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
       name: 'Fish & Chips',
       description: 'Beer-battered fish with crispy fries',
       price: 15.99,
-      image: 'https://via.placeholder.com/300x200/3498DB/FFFFFF?text=Fish+%26+Chips',
+      image: 'https://picsum.photos/300/200?random=6',
       category: 'Main Course',
     },
     {
@@ -70,7 +71,7 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
       name: 'Chocolate Cake',
       description: 'Rich chocolate cake with vanilla ice cream',
       price: 6.99,
-      image: 'https://via.placeholder.com/300x200/8E44AD/FFFFFF?text=Chocolate+Cake',
+      image: 'https://picsum.photos/300/200?random=7',
       category: 'Desserts',
     },
     {
@@ -78,7 +79,7 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
       name: 'Fresh Juice',
       description: 'Freshly squeezed orange juice',
       price: 4.99,
-      image: 'https://via.placeholder.com/300x200/F1C40F/FFFFFF?text=Fresh+Juice',
+      image: 'https://picsum.photos/300/200?random=8',
       category: 'Beverages',
     },
   ]);
@@ -108,7 +109,7 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
-        style={{ flex: 1 }}
+        style={styles.scrollView}
         showsVerticalScrollIndicator={true}
         contentContainerStyle={{ paddingBottom: 100 }}
         keyboardShouldPersistTaps="handled"
@@ -171,6 +172,26 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8F9FA',
+    // Web-specific container styling
+    ...(Platform.OS === 'web' && {
+      height: '100vh',
+      maxHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+    }),
+  },
+  scrollView: {
+    flex: 1,
+    // Web-specific styling for proper scrolling
+    ...(Platform.OS === 'web' && {
+      height: '100%',
+      maxHeight: '100%',
+      overflow: 'auto',
+      overflowY: 'scroll',
+      WebkitOverflowScrolling: 'touch',
+      display: 'flex',
+      flexDirection: 'column',
+    }),
   },
   imageContainer: {
     position: 'relative',
