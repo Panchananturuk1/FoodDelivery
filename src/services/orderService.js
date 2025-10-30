@@ -13,14 +13,15 @@ export const orderService = {
         .insert({
           user_id: user.id,
           restaurant_id: orderData.restaurant_id,
+          delivery_address_id: orderData.delivery_address_id,
+          payment_method_id: orderData.payment_method_id,
           subtotal: orderData.subtotal,
           delivery_fee: orderData.delivery_fee,
           tax_amount: orderData.tax_amount || 0,
           discount_amount: orderData.discount_amount || 0,
           total_amount: orderData.total_amount,
-          delivery_address: orderData.delivery_address,
+          delivery_instructions: orderData.delivery_instructions,
           special_instructions: orderData.special_instructions,
-          payment_method: orderData.payment_method,
           estimated_delivery_time: orderData.estimated_delivery_time
         })
         .select()
@@ -31,10 +32,10 @@ export const orderService = {
       // Insert order items
       const orderItems = orderData.items.map(item => ({
         order_id: order.id,
-        food_item_id: item.food_item_id,
+        menu_item_id: item.menu_item_id || item.id, // Support both field names
         quantity: item.quantity,
-        unit_price: item.unit_price,
-        total_price: item.total_price,
+        unit_price: item.unit_price || item.price,
+        total_price: item.total_price || (item.price * item.quantity),
         special_instructions: item.special_instructions
       }));
 
@@ -68,7 +69,7 @@ export const orderService = {
           ),
           order_items (
             *,
-            food_items (
+            menu_items (
               id,
               name,
               image_url
@@ -101,11 +102,11 @@ export const orderService = {
             name,
             image_url,
             phone,
-            address
+            street_address
           ),
           order_items (
             *,
-            food_items (
+            menu_items (
               id,
               name,
               image_url,

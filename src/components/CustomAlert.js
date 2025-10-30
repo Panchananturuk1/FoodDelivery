@@ -23,13 +23,13 @@ const CustomAlert = ({ visible, title, message, buttons = [], onDismiss, onClose
         Animated.timing(fadeAnim, {
           toValue: 1,
           duration: 200,
-          useNativeDriver: true,
+          useNativeDriver: false,
         }),
         Animated.spring(scaleAnim, {
           toValue: 1,
           tension: 100,
           friction: 8,
-          useNativeDriver: true,
+          useNativeDriver: false,
         }),
       ]).start();
     } else {
@@ -37,12 +37,12 @@ const CustomAlert = ({ visible, title, message, buttons = [], onDismiss, onClose
         Animated.timing(fadeAnim, {
           toValue: 0,
           duration: 150,
-          useNativeDriver: true,
+          useNativeDriver: false,
         }),
         Animated.timing(scaleAnim, {
           toValue: 0.8,
           duration: 150,
-          useNativeDriver: true,
+          useNativeDriver: false,
         }),
       ]).start();
     }

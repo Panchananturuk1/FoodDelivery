@@ -15,6 +15,9 @@ const ProfileScreen = ({ navigation }) => {
   const { user, signOut } = useAuth();
 
   const handleLogout = async () => {
+    console.log('🟡 PROFILE LOGOUT: Starting logout...');
+    console.log('🟡 PROFILE LOGOUT: Current user:', user?.email || 'null');
+    
     Alert.alert(
       'Logout',
       'Are you sure you want to logout?',
@@ -24,9 +27,21 @@ const ProfileScreen = ({ navigation }) => {
           text: 'Logout',
           style: 'destructive',
           onPress: async () => {
-            const { error } = await signOut();
-            if (error) {
-              Alert.alert('Error', error.message);
+            try {
+              console.log('🟡 PROFILE LOGOUT: Calling signOut()...');
+              const result = await signOut();
+              console.log('🟡 PROFILE LOGOUT: signOut() result:', result);
+              
+              if (result.error) {
+                console.log('🟡 PROFILE LOGOUT: Error occurred:', result.error.message);
+                Alert.alert('Logout Error', result.error.message);
+              } else {
+                console.log('🟡 PROFILE LOGOUT: Logout successful, error is:', result.error);
+                Alert.alert('Logout Success', 'Logout completed successfully');
+              }
+            } catch (e) {
+              console.error('🟡 PROFILE LOGOUT: Exception during logout:', e);
+              Alert.alert('Logout Exception', e.message);
             }
           },
         },
