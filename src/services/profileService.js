@@ -8,7 +8,7 @@ export const profileService = {
       if (!user) throw new Error('User not authenticated');
 
       const { data, error } = await supabase
-        .from('profiles')
+        .from('user_profiles')
         .select('*')
         .eq('id', user.id)
         .single();
@@ -19,14 +19,14 @@ export const profileService = {
       if (!data) {
         const newProfile = {
           id: user.id,
+          email: user.email,
           full_name: user.user_metadata?.full_name || '',
           phone: user.user_metadata?.phone || '',
-          avatar_url: user.user_metadata?.avatar_url || null,
-          delivery_addresses: []
+          profile_image_url: user.user_metadata?.avatar_url || null
         };
 
         const { data: createdProfile, error: createError } = await supabase
-          .from('profiles')
+          .from('user_profiles')
           .insert(newProfile)
           .select()
           .single();
@@ -49,7 +49,7 @@ export const profileService = {
       if (!user) throw new Error('User not authenticated');
 
       const { data, error } = await supabase
-        .from('profiles')
+        .from('user_profiles')
         .update({
           full_name: profileData.full_name,
           phone: profileData.phone,
@@ -74,36 +74,47 @@ export const profileService = {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
-      // Get current profile
-      const { data: profile, error: fetchError } = await supabase
-        .from('profiles')
-        .select('delivery_addresses')
-        .eq('id', user.id)
-        .single();
+      // Ensure user profile exists before adding address
+      const profileResult = await this.getProfile();
+      if (profileResult.error) {
+        throw new Error('Failed to ensure user profile exists: ' + profileResult.error);
+      }
 
-      if (fetchError) throw fetchError;
-
-      const currentAddresses = profile.delivery_addresses || [];
-      const newAddress = {
-        id: Date.now().toString(),
-        ...address,
-        created_at: new Date().toISOString()
+      // Helper function to normalize address type
+      const normalizeAddressType = (type) => {
+        if (!type) return 'home';
+        const normalized = type.toLowerCase();
+        if (['home', 'work', 'other'].includes(normalized)) {
+          return normalized;
+        }
+        // Map common variations
+        if (normalized.includes('home') || normalized.includes('house')) return 'home';
+        if (normalized.includes('work') || normalized.includes('office') || normalized.includes('business')) return 'work';
+        return 'other';
       };
 
-      const updatedAddresses = [...currentAddresses, newAddress];
+      // Prepare address data for insertion
+      const addressData = {
+        user_id: user.id,
+        address_type: normalizeAddressType(address.address_type || address.label),
+        street_address: address.street_address || address.street || address.address,
+        city: address.city,
+        state: address.state,
+        postal_code: address.postal_code || address.zipCode,
+        country: address.country || 'India',
+        latitude: address.latitude,
+        longitude: address.longitude,
+        is_default: address.is_default || false
+      };
 
       const { data, error } = await supabase
-        .from('profiles')
-        .update({
-          delivery_addresses: updatedAddresses,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', user.id)
+        .from('user_addresses')
+        .insert(addressData)
         .select()
         .single();
 
       if (error) throw error;
-      return { data: newAddress, error: null };
+      return { data, error: null };
     } catch (error) {
       console.error('Error adding delivery address:', error);
       return { data: null, error: error.message };
@@ -116,34 +127,43 @@ export const profileService = {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
-      // Get current profile
-      const { data: profile, error: fetchError } = await supabase
-        .from('profiles')
-        .select('delivery_addresses')
-        .eq('id', user.id)
-        .single();
+      // Helper function to normalize address type
+      const normalizeAddressType = (type) => {
+        if (!type) return 'home';
+        const normalized = type.toLowerCase();
+        if (['home', 'work', 'other'].includes(normalized)) {
+          return normalized;
+        }
+        // Map common variations
+        if (normalized.includes('home') || normalized.includes('house')) return 'home';
+        if (normalized.includes('work') || normalized.includes('office') || normalized.includes('business')) return 'work';
+        return 'other';
+      };
 
-      if (fetchError) throw fetchError;
-
-      const currentAddresses = profile.delivery_addresses || [];
-      const updatedAddresses = currentAddresses.map(addr => 
-        addr.id === addressId 
-          ? { ...addr, ...updatedAddress, updated_at: new Date().toISOString() }
-          : addr
-      );
+      // Prepare updated address data
+      const addressData = {
+        address_type: normalizeAddressType(updatedAddress.address_type || updatedAddress.label),
+        street_address: updatedAddress.street_address || updatedAddress.street || updatedAddress.address,
+        city: updatedAddress.city,
+        state: updatedAddress.state,
+        postal_code: updatedAddress.postal_code || updatedAddress.zipCode,
+        country: updatedAddress.country || 'India',
+        latitude: updatedAddress.latitude,
+        longitude: updatedAddress.longitude,
+        is_default: updatedAddress.is_default,
+        updated_at: new Date().toISOString()
+      };
 
       const { data, error } = await supabase
-        .from('profiles')
-        .update({
-          delivery_addresses: updatedAddresses,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', user.id)
+        .from('user_addresses')
+        .update(addressData)
+        .eq('id', addressId)
+        .eq('user_id', user.id)
         .select()
         .single();
 
       if (error) throw error;
-      return { data: updatedAddresses.find(addr => addr.id === addressId), error: null };
+      return { data, error: null };
     } catch (error) {
       console.error('Error updating delivery address:', error);
       return { data: null, error: error.message };
@@ -156,27 +176,11 @@ export const profileService = {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
-      // Get current profile
-      const { data: profile, error: fetchError } = await supabase
-        .from('profiles')
-        .select('delivery_addresses')
-        .eq('id', user.id)
-        .single();
-
-      if (fetchError) throw fetchError;
-
-      const currentAddresses = profile.delivery_addresses || [];
-      const updatedAddresses = currentAddresses.filter(addr => addr.id !== addressId);
-
       const { data, error } = await supabase
-        .from('profiles')
-        .update({
-          delivery_addresses: updatedAddresses,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', user.id)
-        .select()
-        .single();
+        .from('user_addresses')
+        .delete()
+        .eq('id', addressId)
+        .eq('user_id', user.id);
 
       if (error) throw error;
       return { data: true, error: null };
@@ -193,16 +197,16 @@ export const profileService = {
       if (!user) throw new Error('User not authenticated');
 
       const { data, error } = await supabase
-        .from('profiles')
-        .select('delivery_addresses')
-        .eq('id', user.id)
-        .single();
+        .from('user_addresses')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return { data: data.delivery_addresses || [], error: null };
+      return { data: data || [], error: null };
     } catch (error) {
       console.error('Error fetching delivery addresses:', error);
-      return { data: null, error: error.message };
+      return { data: [], error: error.message };
     }
   },
 
@@ -245,7 +249,7 @@ export const profileService = {
 
       // Update profile with new avatar URL
       const { data, error } = await supabase
-        .from('profiles')
+        .from('user_profiles')
         .update({
           avatar_url: publicUrl,
           updated_at: new Date().toISOString()
@@ -270,7 +274,7 @@ export const profileService = {
 
       // Delete profile (this will cascade to related data due to foreign key constraints)
       const { error: profileError } = await supabase
-        .from('profiles')
+        .from('user_profiles')
         .delete()
         .eq('id', user.id);
 

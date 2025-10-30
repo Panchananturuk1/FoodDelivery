@@ -14,9 +14,20 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useCart } from '../../contexts/CartContext';
 import { profileService } from '../../services/profileService';
+import { orderService } from '../../services/orderService';
 
 const AddressScreen = ({ navigation }) => {
-  const { updateDeliveryAddress, deliveryAddress, getTotal } = useCart();
+  const { 
+    updateDeliveryAddress, 
+    deliveryAddress, 
+    getTotal, 
+    getSubtotal, 
+    getDeliveryFee, 
+    getTax, 
+    cartItems, 
+    getCurrentRestaurant,
+    clearCart 
+  } = useCart();
   const [selectedAddress, setSelectedAddress] = useState(deliveryAddress);
   const [showAddForm, setShowAddForm] = useState(false);
   const [savedAddresses, setSavedAddresses] = useState([]);
@@ -114,6 +125,11 @@ const AddressScreen = ({ navigation }) => {
       return;
     }
 
+    if (!cartItems || cartItems.length === 0) {
+      Alert.alert('Error', 'Your cart is empty');
+      return;
+    }
+
     Alert.alert(
       'Order Confirmation',
       `Your order will be delivered to:\n${selectedAddress.street}, ${selectedAddress.city}, ${selectedAddress.state} ${selectedAddress.zipCode}\n\nTotal: $${getTotal().toFixed(2)}`,
@@ -121,9 +137,64 @@ const AddressScreen = ({ navigation }) => {
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Place Order',
-          onPress: () => {
-            Alert.alert('Success', 'Order placed successfully! You will receive a confirmation shortly.');
-            navigation.navigate('Home');
+          onPress: async () => {
+            try {
+              setLoading(true);
+              
+              // Get the current restaurant from cart items
+              const currentRestaurant = getCurrentRestaurant();
+              if (!currentRestaurant) {
+                Alert.alert('Error', 'Unable to identify restaurant. Please try again.');
+                return;
+              }
+
+              // Prepare order data
+              const orderData = {
+                restaurant_id: currentRestaurant.id,
+                delivery_address_id: selectedAddress.id,
+                payment_method_id: null, // Will be set when payment methods are implemented
+                subtotal: getSubtotal(),
+                delivery_fee: getDeliveryFee(),
+                tax_amount: getTax(),
+                total_amount: getTotal(),
+                special_instructions: selectedAddress.instructions || '',
+                items: cartItems.map(item => ({
+                  menu_item_id: item.id,
+                  quantity: item.quantity,
+                  unit_price: item.price,
+                  total_price: item.price * item.quantity,
+                  special_instructions: item.specialInstructions || ''
+                }))
+              };
+
+              // Create the order
+              const { data: order, error } = await orderService.createOrder(orderData);
+              
+              if (error) {
+                console.error('Error creating order:', error);
+                Alert.alert('Error', 'Failed to place order. Please try again.');
+                return;
+              }
+
+              // Clear the cart after successful order
+              clearCart();
+              
+              Alert.alert(
+                'Success', 
+                `Order placed successfully! Order #${order.order_number}\n\nYou will receive a confirmation shortly.`,
+                [
+                  {
+                    text: 'OK',
+                    onPress: () => navigation.navigate('Home')
+                  }
+                ]
+              );
+            } catch (error) {
+              console.error('Error placing order:', error);
+              Alert.alert('Error', 'Failed to place order. Please try again.');
+            } finally {
+              setLoading(false);
+            }
           },
         },
       ]

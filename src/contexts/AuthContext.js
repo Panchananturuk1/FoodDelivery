@@ -162,7 +162,7 @@ export const AuthProvider = ({ children }) => {
         return { success: false, error };
       }
       console.log('🔴 AuthContext: Returning success response');
-      return { success: true };
+      return { success: true, error: null };
     } catch (e) {
       console.error('🔴 AuthContext: Exception in signOut:', e);
       // On unexpected error, still clear local user state so UI redirects

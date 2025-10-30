@@ -111,39 +111,33 @@ const HomeScreen = ({ navigation }) => {
     return email.charAt(0).toUpperCase();
   };
 
-  // Handle logout
-  const handleLogout = () => {
-     console.log('🟡 HomeScreen: handleLogout called');
-     setShowUserMenu(false);
-     
-     Alert.alert(
-       'Logout',
-       'Are you sure you want to logout?',
-       [
-         { text: 'Cancel', style: 'cancel' },
-         {
-           text: 'Logout',
-           style: 'destructive',
-           onPress: async () => {
-             console.log('🟡 HomeScreen: User confirmed logout, calling signOut...');
-             try {
-               const result = await signOut();
-               console.log('🟡 HomeScreen: signOut result:', result);
-               if (!result.success) {
-                 console.error('🟡 HomeScreen: signOut failed:', result.error);
-                 Alert.alert('Error', 'Failed to logout. Please try again.');
-               } else {
-                 console.log('🟡 HomeScreen: signOut successful, should redirect now');
-               }
-             } catch (error) {
-               console.error('🟡 HomeScreen: Exception during signOut:', error);
-               Alert.alert('Error', 'An unexpected error occurred during logout.');
-             }
-           },
-         },
-       ]
-     );
-   };
+  // Handle logout with detailed debugging
+  const handleLogout = async () => {
+    setShowUserMenu(false);
+    
+    console.log('🔴 LOGOUT: Starting logout...');
+    console.log('🔴 LOGOUT: Current user:', user?.email || 'null');
+    console.log('🔴 LOGOUT: User object:', user);
+    
+    try {
+      console.log('🔴 LOGOUT: Calling signOut()...');
+      const result = await signOut();
+      console.log('🔴 LOGOUT: signOut() result:', result);
+      console.log('🔴 LOGOUT: Result type:', typeof result);
+      console.log('🔴 LOGOUT: Result keys:', Object.keys(result || {}));
+      
+      if (result.error) {
+        console.log('🔴 LOGOUT: Error occurred:', result.error.message);
+        Alert.alert('Logout Error', result.error.message);
+      } else {
+        console.log('🔴 LOGOUT: Logout successful, error is:', result.error);
+        Alert.alert('Logout Success', 'Logout completed successfully');
+      }
+    } catch (e) {
+      console.error('🔴 LOGOUT: Exception during logout:', e);
+      Alert.alert('Logout Exception', e.message);
+    }
+  };
 
   // Handle view profile
   const handleViewProfile = () => {
@@ -194,6 +188,8 @@ const HomeScreen = ({ navigation }) => {
             onChangeText={setSearchQuery}
           />
         </View>
+
+
 
         {/* Promotional Banner */}
         <LinearGradient
@@ -287,22 +283,19 @@ const HomeScreen = ({ navigation }) => {
               style={styles.userMenuItem}
               onPress={() => {
                 setShowUserMenu(false);
-                navigation.navigate('Addresses');
-              }}
-            >
-              <Ionicons name="location-outline" size={24} color="#333" />
-              <Text style={styles.userMenuItemText}>Addresses</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={styles.userMenuItem}
-              onPress={() => {
-                setShowUserMenu(false);
                 navigation.navigate('Settings');
               }}
             >
               <Ionicons name="settings-outline" size={24} color="#333" />
               <Text style={styles.userMenuItemText}>Settings</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.userMenuItem, styles.logoutMenuItem]}
+              onPress={handleLogout}
+            >
+              <Ionicons name="log-out-outline" size={24} color="#FF6B6B" />
+              <Text style={[styles.userMenuItemText, styles.logoutMenuText]}>Logout</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -614,6 +607,13 @@ const styles = StyleSheet.create({
     marginLeft: 15,
     fontWeight: '500',
   },
+  logoutMenuItem: {
+    borderBottomWidth: 0,
+  },
+  logoutMenuText: {
+    color: '#FF6B6B',
+  },
+
 });
 
 export default HomeScreen;
