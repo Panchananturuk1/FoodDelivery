@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,11 +13,21 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
 
-const ForgotPasswordScreen = ({ navigation }) => {
+const ForgotPasswordScreen = ({ navigation, route }) => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
+  
+  // Get error message from route params (e.g., from expired password reset links)
+  const errorMessage = route?.params?.errorMessage;
 
   const { resetPassword } = useAuth();
+
+  // Show error message if provided from route params
+  useEffect(() => {
+    if (errorMessage) {
+      Alert.alert('Password Reset Error', errorMessage);
+    }
+  }, [errorMessage]);
 
   const handleResetPassword = async () => {
     // Validate email input

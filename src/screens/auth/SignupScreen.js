@@ -131,14 +131,16 @@ const SignupScreen = ({ navigation }) => {
     setLoading(true);
     const { fullName, email, phone, password } = formData;
     
-    const { error, message, requiresConfirmation } = await signUp(email.trim(), password, {
+    const result = await signUp(email.trim(), password, {
       full_name: fullName.trim(),
       phone: phone.trim(),
     });
     
-    if (error) {
+    console.log('SignupScreen: Signup result:', result);
+    
+    if (result.error) {
       // Handle specific error cases with user-friendly messages
-      if (error.message?.includes('User already registered')) {
+      if (result.error.message?.includes('User already registered')) {
         showAlert(
           'Account Already Exists',
           'An account with this email address already exists. Please try logging in instead.',
@@ -153,31 +155,31 @@ const SignupScreen = ({ navigation }) => {
             }
           ]
         );
-      } else if (error.message?.includes('Invalid email')) {
+      } else if (result.error.message?.includes('Invalid email')) {
         showAlert(
           'Invalid Email',
           'Please enter a valid email address.',
           [{ text: 'OK', onPress: hideAlert }]
         );
-      } else if (error.message?.includes('Password should be at least')) {
+      } else if (result.error.message?.includes('Password should be at least')) {
         showAlert(
           'Weak Password',
           'Password must be at least 6 characters long.',
           [{ text: 'OK', onPress: hideAlert }]
         );
-      } else if (error.message?.includes('Too many requests') || error.message?.includes('429')) {
+      } else if (result.error.message?.includes('Too many requests') || result.error.message?.includes('429')) {
         showAlert(
           'Too Many Attempts',
           'Too many signup attempts. Please wait a few minutes before trying again.',
           [{ text: 'OK', onPress: hideAlert }]
         );
-      } else if (error.message?.includes('network') || error.message?.includes('fetch')) {
+      } else if (result.error.message?.includes('network') || result.error.message?.includes('fetch')) {
         showAlert(
           'Connection Error',
           'Unable to connect to the server. Please check your internet connection and try again.',
           [{ text: 'OK', onPress: hideAlert }]
         );
-      } else if (error.message?.includes('Email rate limit exceeded')) {
+      } else if (result.error.message?.includes('Email rate limit exceeded')) {
         showAlert(
           'Email Limit Exceeded',
           'Too many emails sent. Please wait before requesting another verification email.',
@@ -186,37 +188,41 @@ const SignupScreen = ({ navigation }) => {
       } else {
         showAlert(
           'Signup Failed',
-          error.message || 'An unexpected error occurred during signup. Please try again.',
+          result.error.message || 'An unexpected error occurred during signup. Please try again.',
           [{ text: 'OK', onPress: hideAlert }]
         );
       }
     } else {
       // Handle different signup outcomes
-      if (requiresConfirmation) {
+      if (result.requiresConfirmation) {
         // Email confirmation required
-        Alert.alert(
+        showAlert(
           'Check Your Email', 
-          message || 'Account created successfully! Please check your email and click the confirmation link to activate your account.',
+          result.message || 'Account created successfully! Please check your email and click the confirmation link to activate your account.',
           [{ 
             text: 'OK', 
             onPress: () => {
-              // Navigate to login screen
+              hideAlert();
               navigation.navigate('Login', { 
                 email: email.trim(),
-                showConfirmationMessage: true 
+                message: 'Please check your email and confirm your account before logging in.'
               });
             }
           }]
         );
       } else {
         // Account immediately active
-        Alert.alert(
-          'Success', 
-          message || 'Account created and activated successfully!',
+        showAlert(
+          'Account Created', 
+          result.message || 'Account created and activated successfully!',
           [{ 
-            text: 'Sign In Now', 
+            text: 'OK', 
             onPress: () => {
-              navigation.navigate('Login', { email: email.trim() });
+              hideAlert();
+              navigation.navigate('Login', { 
+                email: email.trim(),
+                message: 'Account created successfully! You can now log in.'
+              });
             }
           }]
         );
