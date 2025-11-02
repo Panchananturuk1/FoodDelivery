@@ -4,10 +4,39 @@ export const orderService = {
   // Create a new order
   async createOrder(orderData) {
     try {
+      console.log('🔐 OrderService: Checking authentication...');
       const { data: { user } } = await supabase.auth.getUser();
+      console.log('👤 OrderService: User data:', user ? { id: user.id, email: user.email } : 'No user');
+      
       if (!user) throw new Error('User not authenticated');
 
+      console.log('📝 OrderService: Received order data:', JSON.stringify(orderData, null, 2));
+
+      // Validate menu items exist in database before creating order
+      console.log('🔍 OrderService: Validating menu items...');
+      const menuItemIds = orderData.items.map(item => item.menu_item_id || item.id);
+      const { data: validMenuItems, error: validationError } = await supabase
+        .from('menu_items')
+        .select('id, name')
+        .in('id', menuItemIds);
+
+      if (validationError) {
+        console.error('❌ OrderService: Error validating menu items:', validationError);
+        throw validationError;
+      }
+
+      const validIds = validMenuItems.map(item => item.id);
+      const invalidIds = menuItemIds.filter(id => !validIds.includes(id));
+
+      if (invalidIds.length > 0) {
+        console.error('❌ OrderService: Invalid menu item IDs found:', invalidIds);
+        throw new Error(`Invalid menu items in cart. Please refresh and try again. Invalid IDs: ${invalidIds.join(', ')}`);
+      }
+
+      console.log('✅ OrderService: All menu items validated successfully');
+
       // Start a transaction by creating the order first
+      console.log('💾 OrderService: Inserting order into database...');
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
@@ -27,6 +56,8 @@ export const orderService = {
         .select()
         .single();
 
+      console.log('📋 OrderService: Order insert result:', { order, orderError });
+
       if (orderError) throw orderError;
 
       // Insert order items
@@ -39,15 +70,23 @@ export const orderService = {
         special_instructions: item.special_instructions
       }));
 
+      console.log('🛒 OrderService: Prepared order items:', JSON.stringify(orderItems, null, 2));
+      console.log('💾 OrderService: Inserting order items...');
+
       const { error: itemsError } = await supabase
         .from('order_items')
         .insert(orderItems);
 
+      console.log('📋 OrderService: Order items insert result:', { itemsError });
+
       if (itemsError) throw itemsError;
 
-      return { data: order, error: null };
+      console.log('✅ OrderService: Order created successfully with ID:', order.id);
+      const response = { data: order, error: null };
+      console.log('📤 OrderService: Returning response:', JSON.stringify(response, null, 2));
+      return response;
     } catch (error) {
-      console.error('Error creating order:', error);
+      console.error('❌ OrderService: Error creating order:', error);
       return { data: null, error: error.message };
     }
   },

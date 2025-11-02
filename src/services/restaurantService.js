@@ -31,24 +31,34 @@ export const restaurantService = {
       if (restaurantError) throw restaurantError;
 
       const { data: foodItems, error: foodError } = await supabase
-        .from('food_items')
+        .from('menu_items')
         .select(`
           *,
-          food_categories (
+          menu_categories (
             id,
             name
           )
         `)
         .eq('restaurant_id', restaurantId)
         .eq('is_available', true)
-        .order('sort_order');
+        .order('display_order');
 
       if (foodError) throw foodError;
+
+      // Get unique categories from menu items
+      const categoriesMap = new Map();
+      foodItems.forEach(item => {
+        if (item.menu_categories) {
+          categoriesMap.set(item.menu_categories.id, item.menu_categories);
+        }
+      });
+      const menu_categories = Array.from(categoriesMap.values());
 
       return { 
         data: { 
           ...restaurant, 
-          food_items: foodItems 
+          menu_items: foodItems,
+          menu_categories: menu_categories
         }, 
         error: null 
       };
@@ -115,7 +125,7 @@ export const restaurantService = {
   async getFoodItemsByCategory(categoryId, restaurantId = null) {
     try {
       let query = supabase
-        .from('food_items')
+        .from('menu_items')
         .select(`
           *,
           restaurants (
@@ -133,7 +143,7 @@ export const restaurantService = {
         query = query.eq('restaurant_id', restaurantId);
       }
 
-      const { data, error } = await query.order('sort_order');
+      const { data, error } = await query.order('display_order');
 
       if (error) throw error;
       return { data, error: null };

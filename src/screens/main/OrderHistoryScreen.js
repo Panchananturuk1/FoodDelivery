@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,47 +6,82 @@ import {
   StyleSheet,
   TouchableOpacity,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../../contexts/AuthContext';
+import { orderService } from '../../services/orderService';
 
 const OrderHistoryScreen = ({ navigation }) => {
-  const [orders] = useState([
-    {
-      id: 1,
-      restaurant: 'Pizza Palace',
-      items: ['Margherita Pizza', 'Caesar Salad'],
-      total: 21.98,
-      date: '2024-01-15',
-      status: 'Delivered',
-      image: 'https://via.placeholder.com/60x60/FF6B6B/FFFFFF?text=PP',
-    },
-    {
-      id: 2,
-      restaurant: 'Burger Barn',
-      items: ['Cheeseburger', 'Fries'],
-      total: 12.99,
-      date: '2024-01-12',
-      status: 'Delivered',
-      image: 'https://via.placeholder.com/60x60/4ECDC4/FFFFFF?text=BB',
-    },
-    {
-      id: 3,
-      restaurant: 'Sushi Spot',
-      items: ['California Roll', 'Miso Soup'],
-      total: 18.50,
-      date: '2024-01-10',
-      status: 'Delivered',
-      image: 'https://via.placeholder.com/60x60/45B7D1/FFFFFF?text=SS',
-    },
-  ]);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+
+  // Format timestamp to local date and time
+  const formatDate = (timestamp) => {
+    const date = new Date(timestamp);
+    return date.toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+  };
+
+  // Load user's orders
+  const loadOrders = async () => {
+    if (!user) return;
+    
+    try {
+      setLoading(true);
+      const { data: userOrders, error } = await orderService.getUserOrders(user.id);
+      
+      if (error) {
+        console.error('Error loading orders:', error);
+        return;
+      }
+
+      // Transform the data for display
+      const transformedOrders = userOrders.map(order => ({
+        id: order.id,
+        restaurant: order.restaurants?.name || 'Unknown Restaurant',
+        items: order.order_items?.map(item => item.menu_items?.name || 'Unknown Item') || [],
+        total: parseFloat(order.total_amount),
+        date: formatDate(order.created_at),
+        status: order.status.charAt(0).toUpperCase() + order.status.slice(1),
+        image: order.restaurants?.image_url || 'https://via.placeholder.com/60x60/FF6B6B/FFFFFF?text=R',
+        orderNumber: order.order_number,
+      }));
+
+      setOrders(transformedOrders);
+    } catch (error) {
+      console.error('Error loading orders:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadOrders();
+  }, [user]);
 
   const getStatusColor = (status) => {
     switch (status) {
       case 'Delivered':
         return '#4CAF50';
-      case 'In Progress':
+      case 'Pending':
         return '#FF9800';
+      case 'Confirmed':
+        return '#2196F3';
+      case 'Preparing':
+        return '#FF9800';
+      case 'Ready':
+        return '#4CAF50';
+      case 'Out_for_delivery':
+        return '#2196F3';
       case 'Cancelled':
         return '#F44336';
       default:
@@ -59,6 +94,7 @@ const OrderHistoryScreen = ({ navigation }) => {
       <Image source={{ uri: item.image }} style={styles.restaurantImage} />
       <View style={styles.orderInfo}>
         <Text style={styles.restaurantName}>{item.restaurant}</Text>
+        <Text style={styles.orderNumber}>Order #{item.orderNumber}</Text>
         <Text style={styles.orderItems}>{item.items.join(', ')}</Text>
         <Text style={styles.orderDate}>{item.date}</Text>
       </View>
@@ -84,7 +120,12 @@ const OrderHistoryScreen = ({ navigation }) => {
         <View style={styles.placeholder} />
       </View>
 
-      {orders.length === 0 ? (
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#FF6B6B" />
+          <Text style={styles.loadingText}>Loading your orders...</Text>
+        </View>
+      ) : orders.length === 0 ? (
         <View style={styles.emptyState}>
           <Ionicons name="receipt-outline" size={80} color="#CCC" />
           <Text style={styles.emptyStateText}>No orders yet</Text>
@@ -167,6 +208,23 @@ const styles = StyleSheet.create({
   orderDate: {
     fontSize: 12,
     color: '#999',
+  },
+  orderNumber: {
+    fontSize: 13,
+    color: '#FF6B6B',
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#666',
+    marginTop: 10,
   },
   orderRight: {
     alignItems: 'flex-end',

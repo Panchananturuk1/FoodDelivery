@@ -7,14 +7,16 @@ import {
   ScrollView,
   TextInput,
   ActivityIndicator,
-  Alert,
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useCart } from '../../contexts/CartContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { profileService } from '../../services/profileService';
 import { orderService } from '../../services/orderService';
+import { useAlert } from '../../hooks/useAlert';
+import CustomAlert from '../../components/CustomAlert';
 
 const AddressScreen = ({ navigation }) => {
   const { 
@@ -26,8 +28,11 @@ const AddressScreen = ({ navigation }) => {
     getTax, 
     cartItems, 
     getCurrentRestaurant,
-    clearCart 
+    clearCart,
+    validateAndCleanCart
   } = useCart();
+  const { user, session } = useAuth();
+  const { showAlert, alertConfig, hideAlert } = useAlert();
   const [selectedAddress, setSelectedAddress] = useState(deliveryAddress);
   const [showAddForm, setShowAddForm] = useState(false);
   const [savedAddresses, setSavedAddresses] = useState([]);
@@ -52,13 +57,13 @@ const AddressScreen = ({ navigation }) => {
       const { data, error } = await profileService.getDeliveryAddresses();
       if (error) {
         console.error('Error loading addresses:', error);
-        Alert.alert('Error', 'Failed to load saved addresses');
+        showAlert('Error', 'Failed to load saved addresses');
       } else {
         setSavedAddresses(data || []);
       }
     } catch (error) {
       console.error('Error loading addresses:', error);
-      Alert.alert('Error', 'Failed to load saved addresses');
+      showAlert('Error', 'Failed to load saved addresses');
     } finally {
       setLoading(false);
     }
@@ -71,7 +76,7 @@ const AddressScreen = ({ navigation }) => {
 
   const handleAddNewAddress = async () => {
     if (!newAddress.label || !newAddress.street || !newAddress.city || !newAddress.state || !newAddress.zipCode) {
-      Alert.alert('Error', 'Please fill in all required fields');
+      showAlert('Error', 'Please fill in all required fields');
       return;
     }
 
@@ -89,7 +94,7 @@ const AddressScreen = ({ navigation }) => {
       const { data, error } = await profileService.addDeliveryAddress(addressData);
       
       if (error) {
-        Alert.alert('Error', 'Failed to save address. Please try again.');
+        showAlert('Error', 'Failed to save address. Please try again.');
         return;
       }
 
@@ -110,99 +115,151 @@ const AddressScreen = ({ navigation }) => {
         zipCode: '',
         instructions: '',
       });
-      Alert.alert('Success', 'Address added successfully!');
+      showAlert('Success', 'Address added successfully!');
     } catch (error) {
       console.error('Error adding address:', error);
-      Alert.alert('Error', 'Failed to save address. Please try again.');
+      showAlert('Error', 'Failed to save address. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   const handleProceedToPayment = () => {
+    console.log('🔥 BUTTON CLICKED - handleProceedToPayment called!');
+    console.log('🔥 Selected address:', selectedAddress);
+    console.log('🔥 Cart items:', cartItems);
+    console.log('🔥 Cart items length:', cartItems?.length);
+    
     if (!selectedAddress) {
-      Alert.alert('Error', 'Please select a delivery address');
+      console.log('❌ No selected address');
+      showAlert('Error', 'Please select a delivery address');
       return;
     }
 
     if (!cartItems || cartItems.length === 0) {
-      Alert.alert('Error', 'Your cart is empty');
+      console.log('❌ Cart is empty');
+      showAlert('Error', 'Your cart is empty');
       return;
     }
 
-    Alert.alert(
+    console.log('✅ All checks passed, showing confirmation dialog...');
+    console.log('📍 Address for confirmation:', `${selectedAddress.street_address}, ${selectedAddress.city}, ${selectedAddress.state} ${selectedAddress.zip_code}`);
+    console.log('💰 Total for confirmation:', getTotal().toFixed(2));
+    
+    showAlert(
       'Order Confirmation',
-      `Your order will be delivered to:\n${selectedAddress.street}, ${selectedAddress.city}, ${selectedAddress.state} ${selectedAddress.zipCode}\n\nTotal: $${getTotal().toFixed(2)}`,
+      `Your order will be delivered to:\n${selectedAddress.street_address}, ${selectedAddress.city}, ${selectedAddress.state} ${selectedAddress.zip_code}\n\nTotal: $${getTotal().toFixed(2)}`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Place Order',
-          onPress: async () => {
-            try {
-              setLoading(true);
-              
-              // Get the current restaurant from cart items
-              const currentRestaurant = getCurrentRestaurant();
-              if (!currentRestaurant) {
-                Alert.alert('Error', 'Unable to identify restaurant. Please try again.');
-                return;
-              }
-
-              // Prepare order data
-              const orderData = {
-                restaurant_id: currentRestaurant.id,
-                delivery_address_id: selectedAddress.id,
-                payment_method_id: null, // Will be set when payment methods are implemented
-                subtotal: getSubtotal(),
-                delivery_fee: getDeliveryFee(),
-                tax_amount: getTax(),
-                total_amount: getTotal(),
-                special_instructions: selectedAddress.instructions || '',
-                items: cartItems.map(item => ({
-                  menu_item_id: item.id,
-                  quantity: item.quantity,
-                  unit_price: item.price,
-                  total_price: item.price * item.quantity,
-                  special_instructions: item.specialInstructions || ''
-                }))
-              };
-
-              // Create the order
-              const { data: order, error } = await orderService.createOrder(orderData);
-              
-              if (error) {
-                console.error('Error creating order:', error);
-                Alert.alert('Error', 'Failed to place order. Please try again.');
-                return;
-              }
-
-              // Clear the cart after successful order
-              clearCart();
-              
-              Alert.alert(
-                'Success', 
-                `Order placed successfully! Order #${order.order_number}\n\nYou will receive a confirmation shortly.`,
-                [
-                  {
-                    text: 'OK',
-                    onPress: () => navigation.navigate('Home')
-                  }
-                ]
-              );
-            } catch (error) {
-              console.error('Error placing order:', error);
-              Alert.alert('Error', 'Failed to place order. Please try again.');
-            } finally {
-              setLoading(false);
-            }
-          },
+          onPress: () => handleOrderPlacement(),
         },
       ]
     );
   };
 
+  const handleOrderPlacement = async () => {
+    console.log('🎯 USER CONFIRMED ORDER - Starting actual order placement...');
+    console.log('🔍 About to start try-catch block...');
+    
+    // Check authentication state
+    console.log('👤 Current user:', user);
+    console.log('🔐 User session:', session);
+    
+    try {
+      console.log('🚀 Starting order placement process...');
+      setLoading(true);
+      
+      // Validate cart items first
+      console.log('🔍 Validating cart items...');
+      const removedItemsCount = await validateAndCleanCart();
+      if (removedItemsCount > 0) {
+        showAlert('Cart Updated', `${removedItemsCount} invalid item(s) were removed from your cart. Please review your order.`);
+        setLoading(false);
+        return;
+      }
+      
+      // Get the current restaurant from cart items
+      const currentRestaurant = getCurrentRestaurant();
+      console.log('🏪 Current restaurant:', currentRestaurant);
+      
+      if (!currentRestaurant) {
+        console.error('❌ No restaurant found in cart');
+        showAlert('Error', 'Unable to identify restaurant. Please try again.');
+        return;
+      }
+
+      // Log cart items
+      console.log('🛒 Cart items:', cartItems);
+      console.log('📍 Selected address:', selectedAddress);
+
+      // Prepare order data
+      const orderData = {
+        restaurant_id: currentRestaurant.id,
+        delivery_address_id: selectedAddress.id,
+        payment_method_id: null, // Will be set when payment methods are implemented
+        subtotal: getSubtotal(),
+        delivery_fee: getDeliveryFee(),
+        tax_amount: getTax(),
+        total_amount: getTotal(),
+        special_instructions: selectedAddress.instructions || '',
+        items: cartItems.map(item => ({
+          menu_item_id: item.id,
+          quantity: item.quantity,
+          unit_price: item.price,
+          total_price: item.price * item.quantity,
+          special_instructions: item.specialInstructions || ''
+        }))
+      };
+
+      console.log('📦 Order data prepared:', JSON.stringify(orderData, null, 2));
+
+      // Create the order
+      console.log('📞 Calling orderService.createOrder...');
+      const response = await orderService.createOrder(orderData);
+      console.log('📋 Raw response from orderService:', JSON.stringify(response, null, 2));
+      
+      if (response.error) {
+        console.error('❌ Error creating order:', response.error);
+        showAlert('Error', 'Failed to place order. Please try again.');
+        return;
+      }
+
+      if (!response.data) {
+        console.error('❌ No order data received despite no error');
+        showAlert('Error', 'Failed to place order. Please try again.');
+        return;
+      }
+
+      const order = response.data;
+      console.log('✅ Order created successfully:', order);
+
+      // Clear the cart after successful order
+      clearCart();
+      console.log('🧹 Cart cleared');
+      
+      showAlert(
+        'Success', 
+        `Order placed successfully! Order #${order.order_number}\n\nYou will receive a confirmation shortly.`,
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.navigate('MainTabs', { screen: 'Home' })
+          }
+        ]
+      );
+    } catch (error) {
+      console.error('💥 Exception during order placement:', error);
+      showAlert('Error', 'Failed to place order. Please try again.');
+    } finally {
+      setLoading(false);
+      console.log('🏁 Order placement process finished');
+    }
+  };
+
   const handleDeleteAddress = async (addressId) => {
-    Alert.alert(
+    showAlert(
       'Delete Address',
       'Are you sure you want to delete this address?',
       [
@@ -216,7 +273,7 @@ const AddressScreen = ({ navigation }) => {
               const { error } = await profileService.deleteDeliveryAddress(addressId);
               
               if (error) {
-                Alert.alert('Error', 'Failed to delete address. Please try again.');
+                showAlert('Error', 'Failed to delete address. Please try again.');
                 return;
               }
 
@@ -228,10 +285,10 @@ const AddressScreen = ({ navigation }) => {
 
               // Reload addresses
               await loadAddresses();
-              Alert.alert('Success', 'Address deleted successfully!');
+              showAlert('Success', 'Address deleted successfully!');
             } catch (error) {
               console.error('Error deleting address:', error);
-              Alert.alert('Error', 'Failed to delete address. Please try again.');
+              showAlert('Error', 'Failed to delete address. Please try again.');
             } finally {
               setLoading(false);
             }
@@ -394,14 +451,32 @@ const AddressScreen = ({ navigation }) => {
               <Text style={styles.totalAmount}>${getTotal().toFixed(2)}</Text>
             </View>
             <TouchableOpacity
-              style={[styles.proceedButton, !selectedAddress && styles.disabledButton]}
-              onPress={handleProceedToPayment}
-              disabled={!selectedAddress}
+              style={[
+                styles.proceedButton, 
+                (!selectedAddress || loading) && styles.disabledButton
+              ]}
+              onPress={() => {
+                console.log('🚨 PLACE ORDER BUTTON PRESSED!');
+                if (!loading) {
+                  handleProceedToPayment();
+                }
+              }}
+              disabled={!selectedAddress || loading}
             >
-              <Text style={styles.proceedButtonText}>Place Order</Text>
+              <Text style={styles.proceedButtonText}>
+                {loading ? 'Processing...' : 'Place Order'}
+              </Text>
             </TouchableOpacity>
           </View>
       </ScrollView>
+      
+      <CustomAlert
+        visible={alertConfig.visible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        buttons={alertConfig.buttons}
+        onClose={hideAlert}
+      />
     </SafeAreaView>
   );
 };
