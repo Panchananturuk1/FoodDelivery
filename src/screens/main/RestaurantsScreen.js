@@ -22,7 +22,7 @@ const RestaurantsScreen = ({ navigation }) => {
       {
         id: 1,
         name: 'Pizza Palace',
-        image: 'https://via.placeholder.com/400x250/FF6B6B/FFFFFF?text=Pizza+Palace',
+        image: 'https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?w=400&h=250&fit=crop&crop=center',
         rating: 4.5,
         deliveryTime: '25-30 min',
         cuisine: 'Italian',
@@ -32,7 +32,7 @@ const RestaurantsScreen = ({ navigation }) => {
       {
         id: 2,
         name: 'Burger Barn',
-        image: 'https://via.placeholder.com/400x250/4ECDC4/FFFFFF?text=Burger+Barn',
+        image: 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=400&h=250&fit=crop&crop=center',
         rating: 4.3,
         deliveryTime: '20-25 min',
         cuisine: 'American',
@@ -42,7 +42,7 @@ const RestaurantsScreen = ({ navigation }) => {
       {
         id: 3,
         name: 'Sushi Spot',
-        image: 'https://via.placeholder.com/400x250/45B7D1/FFFFFF?text=Sushi+Spot',
+        image: 'https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=400&h=250&fit=crop&crop=center',
         rating: 4.7,
         deliveryTime: '30-35 min',
         cuisine: 'Japanese',
@@ -52,7 +52,7 @@ const RestaurantsScreen = ({ navigation }) => {
       {
         id: 4,
         name: 'Taco Time',
-        image: 'https://via.placeholder.com/400x250/FF9500/FFFFFF?text=Taco+Time',
+        image: 'https://images.unsplash.com/photo-1613514785940-daed07799d9b?w=400&h=250&fit=crop&crop=center',
         rating: 4.2,
         deliveryTime: '15-20 min',
         cuisine: 'Mexican',
@@ -62,7 +62,7 @@ const RestaurantsScreen = ({ navigation }) => {
       {
         id: 5,
         name: 'Thai Garden',
-        image: 'https://via.placeholder.com/400x250/E74C3C/FFFFFF?text=Thai+Garden',
+        image: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=400&h=250&fit=crop&crop=center',
         rating: 4.6,
         deliveryTime: '35-40 min',
         cuisine: 'Thai',
@@ -72,7 +72,7 @@ const RestaurantsScreen = ({ navigation }) => {
       {
         id: 6,
         name: 'Healthy Bowls',
-        image: 'https://via.placeholder.com/400x250/27AE60/FFFFFF?text=Healthy+Bowls',
+        image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=250&fit=crop&crop=center',
         rating: 4.4,
         deliveryTime: '20-25 min',
         cuisine: 'Healthy',
