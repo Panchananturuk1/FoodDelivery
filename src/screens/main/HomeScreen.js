@@ -32,39 +32,47 @@ const HomeScreen = ({ navigation }) => {
       {
         id: 1,
         name: 'Pizza Palace',
-        image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=300&h=200&fit=crop',
+        cuisine: 'Italian, Pizza',
         rating: 4.5,
         deliveryTime: '25-30 min',
-        cuisine: 'Italian',
-        deliveryFee: 2.99,
+        deliveryFee: 'Free',
+        image: 'https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?w=400&h=300&fit=crop&crop=center',
       },
       {
         id: 2,
-        name: 'Burger Barn',
-        image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300&h=200&fit=crop',
-        rating: 4.3,
+        name: 'Burger House',
+        cuisine: 'American, Fast Food',
+        rating: 4.2,
         deliveryTime: '20-25 min',
-        cuisine: 'American',
-        deliveryFee: 1.99,
+        deliveryFee: '$2.99',
+        image: 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=400&h=300&fit=crop&crop=center',
       },
       {
         id: 3,
-        name: 'Sushi Spot',
-        image: 'https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=300&h=200&fit=crop',
+        name: 'Sushi Express',
+        cuisine: 'Japanese, Sushi',
         rating: 4.7,
         deliveryTime: '30-35 min',
-        cuisine: 'Japanese',
-        deliveryFee: 3.99,
+        deliveryFee: '$1.99',
+        image: 'https://images.unsplash.com/photo-1617196034796-73dfa7b1fd56?w=400&h=300&fit=crop&crop=center',
+      },
+      {
+        id: 4,
+        name: 'Taco Fiesta',
+        cuisine: 'Mexican, Tacos',
+        rating: 4.3,
+        deliveryTime: '15-20 min',
+        deliveryFee: 'Free',
+        image: 'https://images.unsplash.com/photo-1613514785940-daed07799d9b?w=400&h=300&fit=crop&crop=center',
       },
     ]);
 
     setCategories([
-      { id: 1, name: 'Pizza', icon: '🍕' },
-      { id: 2, name: 'Burgers', icon: '🍔' },
-      { id: 3, name: 'Sushi', icon: '🍣' },
-      { id: 4, name: 'Chinese', icon: '🥡' },
-      { id: 5, name: 'Mexican', icon: '🌮' },
-      { id: 6, name: 'Indian', icon: '🍛' },
+      { id: 1, name: 'Pizza', icon: '🍕', image: 'https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?w=200&h=200&fit=crop&crop=center' },
+      { id: 2, name: 'Burgers', icon: '🍔', image: 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=200&h=200&fit=crop&crop=center' },
+      { id: 3, name: 'Sushi', icon: '🍣', image: 'https://images.unsplash.com/photo-1617196034796-73dfa7b1fd56?w=200&h=200&fit=crop&crop=center' },
+      { id: 4, name: 'Tacos', icon: '🌮', image: 'https://images.unsplash.com/photo-1613514785940-daed07799d9b?w=200&h=200&fit=crop&crop=center' },
+      { id: 5, name: 'Desserts', icon: '🍰', image: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=200&h=200&fit=crop&crop=center' },
     ]);
   }, []);
 
@@ -91,7 +99,7 @@ const HomeScreen = ({ navigation }) => {
             <Text style={styles.rating}>{item.rating}</Text>
           </View>
           <Text style={styles.deliveryTime}>{item.deliveryTime}</Text>
-          <Text style={styles.deliveryFee}>${item.deliveryFee} delivery</Text>
+          <Text style={styles.deliveryFee}>{item.deliveryFee}</Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -145,10 +153,6 @@ const HomeScreen = ({ navigation }) => {
     navigation.navigate('Profile');
   };
 
-
-
-
-
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
@@ -188,8 +192,6 @@ const HomeScreen = ({ navigation }) => {
             onChangeText={setSearchQuery}
           />
         </View>
-
-
 
         {/* Promotional Banner */}
         <LinearGradient
@@ -231,8 +233,7 @@ const HomeScreen = ({ navigation }) => {
             data={featuredRestaurants}
             renderItem={renderRestaurantCard}
             keyExtractor={(item) => item.id.toString()}
-            horizontal
-            showsHorizontalScrollIndicator={false}
+            showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.restaurantsList}
           />
         </View>
@@ -441,27 +442,31 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   restaurantsList: {
-    paddingHorizontal: 15,
+    paddingHorizontal: 20,
   },
   restaurantCard: {
     backgroundColor: 'white',
     borderRadius: 15,
-    marginHorizontal: 5,
-    width: width * 0.75,
+    marginBottom: 15,
+    width: '100%',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    flexDirection: 'row',
+    overflow: 'hidden',
   },
   restaurantImage: {
-    width: '100%',
-    height: 150,
+    width: 120,
+    height: 120,
     borderTopLeftRadius: 15,
-    borderTopRightRadius: 15,
+    borderBottomLeftRadius: 15,
   },
   restaurantInfo: {
+    flex: 1,
     padding: 15,
+    justifyContent: 'space-between',
   },
   restaurantName: {
     fontSize: 18,
@@ -613,7 +618,6 @@ const styles = StyleSheet.create({
   logoutMenuText: {
     color: '#FF6B6B',
   },
-
 });
 
 export default HomeScreen;
