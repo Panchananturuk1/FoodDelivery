@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,257 +8,57 @@ import {
   Image,
   Alert,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useCart } from '../../contexts/CartContext';
+import { restaurantService } from '../../services/restaurantService';
 
 const RestaurantDetailScreen = ({ route, navigation }) => {
   const { restaurant } = route.params;
   const { addToCart, getCartItemCount } = useCart();
-  
-  // Create cuisine-specific menu items based on restaurant type
-  const getMenuItemsForRestaurant = (restaurant) => {
-    const restaurantName = restaurant.name;
-    const cuisine = restaurant.cuisine.toLowerCase();
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [menuData, setMenuData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-    if (restaurantName === 'Pizza Palace' || cuisine.includes('italian') || cuisine.includes('pizza')) {
-      return [
-        {
-          id: 1,
-          name: 'Margherita Pizza',
-          description: 'Fresh tomatoes, mozzarella, basil, olive oil',
-          price: 12.99,
-          image: 'https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?w=300&h=200&fit=crop&crop=center',
-          category: 'Pizza',
-        },
-        {
-          id: 2,
-          name: 'Pepperoni Pizza',
-          description: 'Pepperoni, mozzarella, tomato sauce',
-          price: 14.99,
-          image: 'https://images.unsplash.com/photo-1628840042765-356cda07504e?w=300&h=200&fit=crop&crop=center',
-          category: 'Pizza',
-        },
-        {
-          id: 3,
-          name: 'Pasta Carbonara',
-          description: 'Creamy pasta with bacon, eggs, and parmesan',
-          price: 13.99,
-          image: 'https://images.unsplash.com/photo-1621996346565-e3dbc353d2e5?w=300&h=200&fit=crop&crop=center',
-          category: 'Pasta',
-        },
-        {
-          id: 4,
-          name: 'Lasagna',
-          description: 'Layers of pasta, meat sauce, and cheese',
-          price: 15.99,
-          image: 'https://images.unsplash.com/photo-1574894709920-11b28e7367e3?w=300&h=200&fit=crop&crop=center',
-          category: 'Pasta',
-        },
-        {
-          id: 5,
-          name: 'Caesar Salad',
-          description: 'Romaine lettuce, parmesan, croutons, caesar dressing',
-          price: 8.99,
-          image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=300&h=200&fit=crop&crop=center',
-          category: 'Salads',
-        },
-        {
-          id: 6,
-          name: 'Tiramisu',
-          description: 'Classic Italian dessert with coffee and mascarpone',
-          price: 6.99,
-          image: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=300&h=200&fit=crop&crop=center',
-          category: 'Desserts',
-        },
-      ];
-    } else if (restaurantName === 'Burger House' || cuisine.includes('american') || cuisine.includes('fast food')) {
-      return [
-        {
-          id: 1,
-          name: 'Classic Cheeseburger',
-          description: 'Beef patty, cheese, lettuce, tomato, onion, pickles',
-          price: 11.99,
-          image: 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=300&h=200&fit=crop&crop=center',
-          category: 'Burgers',
-        },
-        {
-          id: 2,
-          name: 'BBQ Bacon Burger',
-          description: 'Beef patty, bacon, BBQ sauce, onion rings',
-          price: 13.99,
-          image: 'https://images.unsplash.com/photo-1553979459-d2229ba7433a?w=300&h=200&fit=crop&crop=center',
-          category: 'Burgers',
-        },
-        {
-          id: 3,
-          name: 'Crispy Chicken Sandwich',
-          description: 'Fried chicken breast, coleslaw, spicy mayo',
-          price: 12.99,
-          image: 'https://images.unsplash.com/photo-1606755962773-d324e2013afd?w=300&h=200&fit=crop&crop=center',
-          category: 'Sandwiches',
-        },
-        {
-          id: 4,
-          name: 'Loaded Fries',
-          description: 'Crispy fries with cheese, bacon, and green onions',
-          price: 8.99,
-          image: 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=300&h=200&fit=crop&crop=center',
-          category: 'Sides',
-        },
-        {
-          id: 5,
-          name: 'Buffalo Wings',
-          description: '8 pieces of spicy buffalo wings with ranch',
-          price: 10.99,
-          image: 'https://images.unsplash.com/photo-1527477396000-e27163b481c2?w=300&h=200&fit=crop&crop=center',
-          category: 'Appetizers',
-        },
-        {
-          id: 6,
-          name: 'Chocolate Milkshake',
-          description: 'Thick chocolate milkshake with whipped cream',
-          price: 5.99,
-          image: 'https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=300&h=200&fit=crop&crop=center',
-          category: 'Beverages',
-        },
-      ];
-    } else if (restaurantName === 'Sushi Express' || cuisine.includes('japanese') || cuisine.includes('sushi')) {
-      return [
-        {
-          id: 1,
-          name: 'California Roll',
-          description: 'Crab, avocado, cucumber with sesame seeds',
-          price: 8.99,
-          image: 'https://images.unsplash.com/photo-1617196034796-73dfa7b1fd56?w=300&h=200&fit=crop&crop=center',
-          category: 'Sushi Rolls',
-        },
-        {
-          id: 2,
-          name: 'Salmon Nigiri',
-          description: 'Fresh salmon over seasoned sushi rice (2 pieces)',
-          price: 6.99,
-          image: 'https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=300&h=200&fit=crop&crop=center',
-          category: 'Nigiri',
-        },
-        {
-          id: 3,
-          name: 'Dragon Roll',
-          description: 'Eel, cucumber, avocado with eel sauce',
-          price: 12.99,
-          image: 'https://images.unsplash.com/photo-1611143669185-af224c5e3252?w=300&h=200&fit=crop&crop=center',
-          category: 'Sushi Rolls',
-        },
-        {
-          id: 4,
-          name: 'Miso Soup',
-          description: 'Traditional soybean paste soup with tofu and seaweed',
-          price: 3.99,
-          image: 'https://images.unsplash.com/photo-1606491956689-2ea866880c84?w=300&h=200&fit=crop&crop=center',
-          category: 'Soups',
-        },
-        {
-          id: 5,
-          name: 'Chicken Teriyaki',
-          description: 'Grilled chicken with teriyaki sauce and steamed rice',
-          price: 14.99,
-          image: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=300&h=200&fit=crop&crop=center',
-          category: 'Main Course',
-        },
-        {
-          id: 6,
-          name: 'Green Tea Ice Cream',
-          description: 'Traditional Japanese green tea flavored ice cream',
-          price: 4.99,
-          image: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=300&h=200&fit=crop&crop=center',
-          category: 'Desserts',
-        },
-      ];
-    } else if (restaurantName === 'Taco Fiesta' || cuisine.includes('mexican') || cuisine.includes('tacos')) {
-      return [
-        {
-          id: 1,
-          name: 'Beef Tacos',
-          description: 'Seasoned ground beef with lettuce, cheese, tomatoes',
-          price: 9.99,
-          image: 'https://images.unsplash.com/photo-1613514785940-daed07799d9b?w=300&h=200&fit=crop&crop=center',
-          category: 'Tacos',
-        },
-        {
-          id: 2,
-          name: 'Chicken Quesadilla',
-          description: 'Grilled chicken and cheese in a flour tortilla',
-          price: 11.99,
-          image: 'https://images.unsplash.com/photo-1618040996337-56904b7850b9?w=300&h=200&fit=crop&crop=center',
-          category: 'Quesadillas',
-        },
-        {
-          id: 3,
-          name: 'Carnitas Burrito',
-          description: 'Slow-cooked pork with rice, beans, and salsa',
-          price: 12.99,
-          image: 'https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=300&h=200&fit=crop&crop=center',
-          category: 'Burritos',
-        },
-        {
-          id: 4,
-          name: 'Guacamole & Chips',
-          description: 'Fresh avocado dip with crispy tortilla chips',
-          price: 7.99,
-          image: 'https://images.unsplash.com/photo-1541544181051-e46607bc22a4?w=300&h=200&fit=crop&crop=center',
-          category: 'Appetizers',
-        },
-        {
-          id: 5,
-          name: 'Fish Tacos',
-          description: 'Grilled fish with cabbage slaw and lime crema',
-          price: 13.99,
-          image: 'https://images.unsplash.com/photo-1565299585323-38174c4a6471?w=300&h=200&fit=crop&crop=center',
-          category: 'Tacos',
-        },
-        {
-          id: 6,
-          name: 'Churros',
-          description: 'Fried dough pastry with cinnamon sugar and chocolate',
-          price: 5.99,
-          image: 'https://images.unsplash.com/photo-1549007953-2f2dc0b24019?w=300&h=200&fit=crop&crop=center',
-          category: 'Desserts',
-        },
-      ];
-    } else {
-      // Default menu for any other restaurant
-      return [
-        {
-          id: 1,
-          name: 'House Special',
-          description: 'Chef\'s signature dish with seasonal ingredients',
-          price: 16.99,
-          image: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=300&h=200&fit=crop&crop=center',
-          category: 'Specials',
-        },
-        {
-          id: 2,
-          name: 'Garden Salad',
-          description: 'Fresh mixed greens with house dressing',
-          price: 8.99,
-          image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=300&h=200&fit=crop&crop=center',
-          category: 'Salads',
-        },
-        {
-          id: 3,
-          name: 'Grilled Chicken',
-          description: 'Herb-marinated grilled chicken breast with vegetables',
-          price: 14.99,
-          image: 'https://images.unsplash.com/photo-1532550907401-a500c9a57435?w=300&h=200&fit=crop&crop=center',
-          category: 'Main Course',
-        },
-      ];
+  useEffect(() => {
+    fetchMenuData();
+  }, [restaurant.id]);
+
+  const fetchMenuData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await restaurantService.getRestaurantById(restaurant.id);
+      
+      if (response && response.data && response.data.menu_items) {
+        const data = response.data;
+        setMenuData(data);
+        
+        // Set first category as default if available
+        if (data.menu_categories && data.menu_categories.length > 0) {
+          const firstCategoryId = data.menu_categories[0].id;
+          setSelectedCategory(firstCategoryId);
+        }
+      } else {
+        setError('No menu items found for this restaurant');
+      }
+    } catch (err) {
+      console.error('Error fetching menu data:', err);
+      setError('Failed to load menu items');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const [menuItems] = useState(getMenuItemsForRestaurant(restaurant));
-
+  const getMenuItemsForCategory = (categoryId) => {
+    if (!menuData || !menuData.menu_items) return [];
+    return menuData.menu_items.filter(item => item.category_id === categoryId);
+  };
+  
   const handleAddToCart = (item) => {
     addToCart(item, restaurant);
     Alert.alert('Added to Cart', `${item.name} has been added to your cart!`);
@@ -266,11 +66,14 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
 
   const renderMenuItem = (item) => (
     <View key={item.id} style={styles.menuItem}>
-      <Image source={{ uri: item.image }} style={styles.menuItemImage} />
+      <Image 
+        source={{ uri: item.image_url || 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=300&h=200&fit=crop&crop=center' }} 
+        style={styles.menuItemImage} 
+      />
       <View style={styles.menuItemInfo}>
         <Text style={styles.menuItemName}>{item.name}</Text>
         <Text style={styles.menuItemDescription}>{item.description}</Text>
-        <Text style={styles.menuItemPrice}>${item.price.toFixed(2)}</Text>
+        <Text style={styles.menuItemPrice}>${parseFloat(item.price).toFixed(2)}</Text>
       </View>
       <TouchableOpacity
         style={styles.addButton}
@@ -280,6 +83,65 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
       </TouchableOpacity>
     </View>
   );
+
+  const renderCategoryTabs = () => {
+    if (!menuData || !menuData.menu_categories) return null;
+
+    return (
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false}
+        style={styles.categoryTabs}
+        contentContainerStyle={styles.categoryTabsContent}
+      >
+        {menuData.menu_categories.map((category) => (
+          <TouchableOpacity
+            key={category.id}
+            style={[
+              styles.categoryTab,
+              selectedCategory === category.id && styles.selectedCategoryTab
+            ]}
+            onPress={() => setSelectedCategory(category.id)}
+          >
+            <Text style={[
+              styles.categoryTabText,
+              selectedCategory === category.id && styles.selectedCategoryTabText
+            ]}>
+              {category.name}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+    );
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#FF6B6B" />
+          <Text style={styles.loadingText}>Loading menu...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={fetchMenuData}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const currentMenuItems = selectedCategory ? getMenuItemsForCategory(selectedCategory) : [];
+
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -336,7 +198,12 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
         {/* Menu Section */}
         <View style={styles.menuSection}>
           <Text style={styles.menuTitle}>Menu</Text>
-          {menuItems.map(renderMenuItem)}
+          {renderCategoryTabs()}
+          {currentMenuItems.length > 0 ? (
+            currentMenuItems.map(renderMenuItem)
+          ) : (
+            <Text style={styles.noItemsText}>No items available in this category</Text>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -498,6 +365,69 @@ const styles = StyleSheet.create({
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#666',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#FF6B6B',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  retryButton: {
+    backgroundColor: '#FF6B6B',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  categoryTabs: {
+    marginBottom: 20,
+  },
+  categoryTabsContent: {
+    paddingHorizontal: 5,
+  },
+  categoryTab: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginHorizontal: 5,
+    backgroundColor: '#F0F0F0',
+    borderRadius: 20,
+  },
+  selectedCategoryTab: {
+    backgroundColor: '#FF6B6B',
+  },
+  categoryTabText: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
+  },
+  selectedCategoryTabText: {
+    color: 'white',
+  },
+  noItemsText: {
+    textAlign: 'center',
+    fontSize: 16,
+    color: '#666',
+    marginTop: 20,
   },
 });
 

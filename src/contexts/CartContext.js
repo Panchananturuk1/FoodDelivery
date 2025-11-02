@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '../config/supabase';
 
 const CartContext = createContext();
 
@@ -112,6 +113,41 @@ export const CartProvider = ({ children }) => {
     setDeliveryAddress(address);
   };
 
+  // Validate and clean cart items (remove items that don't exist in database)
+  const validateAndCleanCart = async () => {
+    if (cartItems.length === 0) return;
+
+    try {
+      console.log('🔍 CartContext: Validating cart items...');
+      const menuItemIds = cartItems.map(item => item.id);
+      
+      const { data: validMenuItems, error } = await supabase
+        .from('menu_items')
+        .select('id')
+        .in('id', menuItemIds);
+
+      if (error) {
+        console.error('❌ CartContext: Error validating cart items:', error);
+        return;
+      }
+
+      const validIds = validMenuItems.map(item => item.id);
+      const invalidItems = cartItems.filter(item => !validIds.includes(item.id));
+
+      if (invalidItems.length > 0) {
+        console.log('🧹 CartContext: Removing invalid items from cart:', invalidItems.map(item => item.name));
+        setCartItems(prevItems => prevItems.filter(item => validIds.includes(item.id)));
+        return invalidItems.length;
+      }
+
+      console.log('✅ CartContext: All cart items are valid');
+      return 0;
+    } catch (error) {
+      console.error('💥 CartContext: Error during cart validation:', error);
+      return 0;
+    }
+  };
+
   const value = {
     cartItems,
     deliveryAddress,
@@ -127,6 +163,7 @@ export const CartProvider = ({ children }) => {
     hasMultipleRestaurants,
     getCurrentRestaurant,
     updateDeliveryAddress,
+    validateAndCleanCart,
   };
 
   return (

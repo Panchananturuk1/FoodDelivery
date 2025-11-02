@@ -30,7 +30,7 @@ const HomeScreen = ({ navigation }) => {
     // Mock data - replace with actual Supabase queries
     setFeaturedRestaurants([
       {
-        id: 1,
+        id: '550e8400-e29b-41d4-a716-446655440010',
         name: 'Pizza Palace',
         cuisine: 'Italian, Pizza',
         rating: 4.5,
@@ -39,8 +39,8 @@ const HomeScreen = ({ navigation }) => {
         image: 'https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?w=400&h=300&fit=crop&crop=center',
       },
       {
-        id: 2,
-        name: 'Burger House',
+        id: '550e8400-e29b-41d4-a716-446655440011',
+        name: 'Burger Barn',
         cuisine: 'American, Fast Food',
         rating: 4.2,
         deliveryTime: '20-25 min',
@@ -48,8 +48,8 @@ const HomeScreen = ({ navigation }) => {
         image: 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=400&h=300&fit=crop&crop=center',
       },
       {
-        id: 3,
-        name: 'Sushi Express',
+        id: '550e8400-e29b-41d4-a716-446655440012',
+        name: 'Sushi Spot',
         cuisine: 'Japanese, Sushi',
         rating: 4.7,
         deliveryTime: '30-35 min',
@@ -57,9 +57,9 @@ const HomeScreen = ({ navigation }) => {
         image: 'https://images.unsplash.com/photo-1617196034796-73dfa7b1fd56?w=400&h=300&fit=crop&crop=center',
       },
       {
-        id: 4,
-        name: 'Taco Fiesta',
-        cuisine: 'Mexican, Tacos',
+        id: '550e8400-e29b-41d4-a716-446655440013',
+        name: 'Spice Garden',
+        cuisine: 'Indian',
         rating: 4.3,
         deliveryTime: '15-20 min',
         deliveryFee: 'Free',

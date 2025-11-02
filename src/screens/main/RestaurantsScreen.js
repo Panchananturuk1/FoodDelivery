@@ -20,7 +20,7 @@ const RestaurantsScreen = ({ navigation }) => {
     // Mock data - replace with Supabase query
     const mockRestaurants = [
       {
-        id: 1,
+        id: '550e8400-e29b-41d4-a716-446655440010',
         name: 'Pizza Palace',
         image: 'https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?w=400&h=250&fit=crop&crop=center',
         rating: 4.5,
@@ -30,7 +30,7 @@ const RestaurantsScreen = ({ navigation }) => {
         description: 'Authentic Italian pizza and pasta',
       },
       {
-        id: 2,
+        id: '550e8400-e29b-41d4-a716-446655440011',
         name: 'Burger Barn',
         image: 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=400&h=250&fit=crop&crop=center',
         rating: 4.3,
@@ -40,7 +40,7 @@ const RestaurantsScreen = ({ navigation }) => {
         description: 'Juicy burgers and crispy fries',
       },
       {
-        id: 3,
+        id: '550e8400-e29b-41d4-a716-446655440012',
         name: 'Sushi Spot',
         image: 'https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=400&h=250&fit=crop&crop=center',
         rating: 4.7,
@@ -50,34 +50,24 @@ const RestaurantsScreen = ({ navigation }) => {
         description: 'Fresh sushi and Japanese cuisine',
       },
       {
-        id: 4,
-        name: 'Taco Time',
+        id: '550e8400-e29b-41d4-a716-446655440013',
+        name: 'Spice Garden',
         image: 'https://images.unsplash.com/photo-1613514785940-daed07799d9b?w=400&h=250&fit=crop&crop=center',
-        rating: 4.2,
-        deliveryTime: '15-20 min',
-        cuisine: 'Mexican',
-        deliveryFee: 1.49,
-        description: 'Authentic Mexican tacos and burritos',
-      },
-      {
-        id: 5,
-        name: 'Thai Garden',
-        image: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=400&h=250&fit=crop&crop=center',
-        rating: 4.6,
-        deliveryTime: '35-40 min',
-        cuisine: 'Thai',
-        deliveryFee: 2.49,
-        description: 'Spicy and flavorful Thai dishes',
-      },
-      {
-        id: 6,
-        name: 'Healthy Bowls',
-        image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=250&fit=crop&crop=center',
         rating: 4.4,
-        deliveryTime: '20-25 min',
-        cuisine: 'Healthy',
-        deliveryFee: 1.99,
-        description: 'Fresh salads and healthy bowls',
+        deliveryTime: '35-50 min',
+        cuisine: 'Indian',
+        deliveryFee: 2.49,
+        description: 'Authentic Indian cuisine with traditional spices',
+      },
+      {
+        id: '550e8400-e29b-41d4-a716-446655440014',
+        name: 'Dragon Wok',
+        image: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=400&h=250&fit=crop&crop=center',
+        rating: 4.2,
+        deliveryTime: '25-40 min',
+        cuisine: 'Chinese',
+        deliveryFee: 2.99,
+        description: 'Traditional Chinese dishes and stir-fries',
       },
     ];
     setRestaurants(mockRestaurants);
