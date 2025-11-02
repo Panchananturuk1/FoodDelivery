@@ -48,7 +48,7 @@ The app is deployed on Vercel and accessible via web browser. You can test all f
 - **Styling**: StyleSheet with responsive design
 
 ## 📱 Screenshots
- <img src="https://drive.google.com/uc?export=view&id=1Kbh3fDKiLYb2fGdLvOGGPzQIRd3wadj4" alt="Bible App Preview" width="300"> <img src="https://drive.google.com/uc?export=view&id=1T62rsvWdis3kabDc1FaAzlNFk-2h5NDR" alt="Bible App Preview" width="300">
+ <img src="https://drive.google.com/uc?export=view&id=1Kbh3fDKiLYb2fGdLvOGGPzQIRd3wadj4" alt="Bible App Preview" width="300"> <img src="https://drive.google.com/uc?export=view&id=1T62rsvWdis3kabDc1FaAzlNFk-2h5NDR" alt="Menu" width="300">
  
 
 The app includes:
